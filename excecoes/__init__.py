@@ -1,0 +1,16 @@
+from .trekking_error import TrekkingError
+
+from .corrida_ja_existe_error import CorridaJaExisteError
+from .corrida_nao_encontrada_error import CorridaNaoEncontradaError
+
+from .equipe_ja_existe_error import EquipeJaExisteError
+from .equipe_nao_encontrada_error import EquipeNaoEncontradaError
+
+from .professor_ja_existe_error import ProfessorJaExisteError
+from .professor_nao_encontrado_error import ProfessorNaoEncontradoError
+
+from .checkpoint_nao_encontrado_error import CheckpointNaoEncontradoError
+
+from .equipe_nao_participante_error import EquipeNaoParticipanteError
+
+from .passagem_ja_registrada_error import PassagemJaRegistradaError
