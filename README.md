@@ -35,3 +35,47 @@ Os principais componentes são:
 Pedro Júlio  
 Francisco Thalys  
 Luiz Guilherme Pereira
+
+## Diagrama Entidade-Relacionamento
+
+```mermaid
+erDiagram
+    PROFESSOR {
+        int id_professor PK
+        string nome
+    }
+    
+    CORRIDA {
+        int id_corrida PK
+        string nome
+        date data_evento
+        int id_professor FK
+    }
+    
+    EQUIPE {
+        int id_equipe PK
+        string nome
+        int id_corrida FK
+    }
+    
+    CHECKPOINT {
+        int id_checkpoint PK
+        string descricao
+        int ordem_trajeto
+        int id_corrida FK
+    }
+    
+    PASSAGEM {
+        int id_passagem PK
+        int id_equipe FK
+        int id_checkpoint FK
+        datetime horario_registro
+    }
+
+    PROFESSOR ||--o{ CORRIDA : "organiza / gerencia"
+    CORRIDA ||--|{ EQUIPE : "inscreve"
+    CORRIDA ||--|{ CHECKPOINT : "possui no trajeto"
+    
+    EQUIPE ||--o{ PASSAGEM : "realiza"
+    CHECKPOINT ||--o{ PASSAGEM : "registra a chegada de"
+```
