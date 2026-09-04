@@ -1,40 +1,46 @@
 # Sistema de Trekking
 
-Sistema desenvolvido em Python para gerenciamento e acompanhamento de corridas de trekking.
+Sistema desenvolvido em Python para auxiliar no gerenciamento e acompanhamento de corridas de trekking.
 
 ## 👥 Equipe
 
-**Projeto:** Sistema de Trekking
+**Projeto:** Sistema de Trekking  
 **Turma:** Infoweb 2v
 
 **Integrantes:**
-
-* Pedro Júlio
-* Francisco Thalys
-* Luiz Guilherme Pereira
+- Pedro Júlio
+- Francisco Thalys
+- Luiz Guilherme Pereira
 
 ## 📌 Sobre o sistema
 
-O Sistema de Trekking tem como objetivo auxiliar na organização de corridas de trekking, permitindo o cadastro e a consulta das principais informações utilizadas durante uma competição.
+O Sistema de Trekking tem como objetivo auxiliar na organização de corridas de trekking, permitindo o cadastro e o acompanhamento das principais informações envolvidas em uma competição.
 
 O sistema permite cadastrar corridas, equipes, professores e checkpoints, além de registrar a participação das equipes nas corridas e suas passagens pelos checkpoints.
 
-Durante a realização de uma corrida, cada checkpoint possui um número e um professor responsável. As equipes são previamente vinculadas às corridas das quais participarão. A partir disso, podem ser registradas as passagens das equipes pelos checkpoints, armazenando também o momento de cada registro.
+Durante uma corrida, cada checkpoint possui um número e um professor responsável. Antes de registrar uma passagem, a equipe deve estar vinculada à corrida. O sistema também verifica se o checkpoint pertence à corrida informada, se o professor é responsável pelo checkpoint e se a mesma equipe já passou por aquele checkpoint.
 
-Dessa forma, o sistema permite acompanhar as corridas e consultar informações relacionadas às equipes, checkpoints, professores e passagens realizadas.
+Atualmente, os dados do sistema são mantidos somente em memória. A estrutura apresentada neste README representa o modelo lógico que servirá como referência para as próximas etapas de implementação do banco de dados.
 
 ## ⚙️ Principais funcionalidades
 
-* Cadastro de corridas.
-* Cadastro de equipes.
-* Cadastro de professores.
-* Cadastro de checkpoints.
-* Vinculação de equipes às corridas.
-* Registro de passagem das equipes pelos checkpoints.
-* Consulta de corridas, equipes, professores e checkpoints.
-* Consulta de passagens por corrida, equipe ou checkpoint.
-* Controle para evitar duplicidade de passagem.
-* Controle da numeração dos checkpoints dentro de cada corrida.
+- Cadastro de corridas.
+- Cadastro de equipes.
+- Cadastro de professores.
+- Cadastro de checkpoints.
+- Associação de equipes às corridas.
+- Registro de passagem das equipes pelos checkpoints.
+- Consulta de corridas.
+- Consulta de equipes.
+- Consulta de professores.
+- Consulta de checkpoints.
+- Consulta de passagens por corrida, equipe ou checkpoint.
+- Controle de nomes duplicados.
+- Controle de checkpoints com números duplicados dentro da mesma corrida.
+- Controle de passagens duplicadas.
+- Validação da participação da equipe antes do registro de uma passagem.
+- Validação de que o checkpoint pertence à corrida.
+- Validação de que o professor é responsável pelo checkpoint.
 
 ## 📁 Estrutura do projeto
 
@@ -51,7 +57,7 @@ CheckpointsTrekking/
 └── ARQUITETURA.md
 ```
 
-O projeto utiliza uma organização em camadas para separar as responsabilidades do sistema:
+O projeto foi organizado em camadas para separar as responsabilidades do sistema:
 
 ```text
 Interface
@@ -65,20 +71,28 @@ Modelos
 Exceções
 ```
 
-Os dados utilizados pelo sistema permanecem armazenados somente em memória nesta etapa do projeto.
+### Responsabilidades das camadas
+
+- **Interface:** apresenta menus, recebe informações do usuário e exibe os resultados.
+- **Serviços:** concentram as operações e as regras de negócio.
+- **Aplicação:** mantém as coleções de dados em memória e centraliza o armazenamento durante a execução.
+- **Modelos:** representam Corrida, Equipe, Professor, Checkpoint e Passagem.
+- **Exceções:** representam situações inválidas previstas pelas regras do sistema.
 
 ## 🗄️ Modelo lógico do banco de dados
 
-O modelo lógico utilizado como referência para as próximas etapas é composto pelas seguintes relações:
+O modelo lógico abaixo representa a estrutura que será utilizada como referência para a futura implementação do banco de dados.
 
-* **CORRIDA** — identifica as corridas cadastradas.
-* **EQUIPE** — identifica as equipes participantes.
-* **PROFESSOR** — identifica os professores responsáveis.
-* **CHECKPOINT** — representa os pontos de controle de uma corrida.
-* **PARTICIPACAO** — representa a associação entre equipes e corridas.
-* **PASSAGEM** — registra a passagem de uma equipe por um checkpoint.
+As principais relações são:
 
-### Diagrama ER
+- **CORRIDA:** representa as corridas cadastradas.
+- **EQUIPE:** representa as equipes participantes.
+- **PROFESSOR:** representa os professores responsáveis pelos checkpoints.
+- **CHECKPOINT:** representa os pontos de controle de uma corrida.
+- **PARTICIPACAO:** resolve o relacionamento muitos-para-muitos entre equipes e corridas.
+- **PASSAGEM:** representa o evento de uma equipe passando por um checkpoint.
+
+## 🔗 Diagrama ER
 
 ```mermaid
 erDiagram
@@ -87,8 +101,10 @@ erDiagram
     PROFESSOR ||--o{ CHECKPOINT : responsavel
     CORRIDA ||--o{ PARTICIPACAO : recebe
     EQUIPE ||--o{ PARTICIPACAO : participa
-    PARTICIPACAO ||--o{ PASSAGEM : permite
+    CORRIDA ||--o{ PASSAGEM : registra
+    EQUIPE ||--o{ PASSAGEM : realiza
     CHECKPOINT ||--o{ PASSAGEM : recebe
+    PROFESSOR ||--o{ PASSAGEM : registra
 
     CORRIDA {
         int id_corrida PK
@@ -127,7 +143,7 @@ erDiagram
     }
 ```
 
-## 🔑 Relações e restrições
+## 🔑 Estrutura das relações
 
 ### CORRIDA
 
@@ -138,7 +154,7 @@ CORRIDA(
 )
 ```
 
-Cada corrida possui um identificador próprio e seu nome não pode ser repetido.
+Cada corrida possui um identificador próprio e seu nome deve ser único.
 
 ### EQUIPE
 
@@ -149,7 +165,7 @@ EQUIPE(
 )
 ```
 
-Cada equipe possui um identificador próprio e seu nome não pode ser repetido.
+Cada equipe possui um identificador próprio e seu nome deve ser único.
 
 ### PROFESSOR
 
@@ -160,7 +176,7 @@ PROFESSOR(
 )
 ```
 
-Cada professor possui um identificador próprio e seu nome não pode ser repetido.
+Cada professor possui um identificador próprio e seu nome deve ser único.
 
 ### CHECKPOINT
 
@@ -174,9 +190,9 @@ CHECKPOINT(
 )
 ```
 
-Cada checkpoint pertence a uma única corrida e possui um único professor responsável.
+Cada checkpoint pertence obrigatoriamente a uma corrida e possui um professor responsável.
 
-O número do checkpoint pode existir em corridas diferentes, mas não pode se repetir dentro da mesma corrida.
+O número do checkpoint pode aparecer em corridas diferentes, mas não pode ser repetido dentro da mesma corrida.
 
 ### PARTICIPACAO
 
@@ -189,7 +205,7 @@ PARTICIPACAO(
 
 A relação `PARTICIPACAO` resolve o relacionamento muitos-para-muitos entre `EQUIPE` e `CORRIDA`.
 
-Uma equipe pode participar de várias corridas, e uma corrida pode receber várias equipes.
+Uma equipe pode participar de várias corridas e uma corrida pode possuir várias equipes participantes.
 
 ### PASSAGEM
 
@@ -205,45 +221,66 @@ PASSAGEM(
 )
 ```
 
-`PASSAGEM` representa o registro de uma equipe em um checkpoint de uma corrida.
+A relação `PASSAGEM` representa o registro de uma equipe em um checkpoint durante uma corrida.
 
-O registro deve estar relacionado a uma participação existente da equipe na corrida e ao professor responsável pelo checkpoint.
-
-A combinação:
+Além das chaves estrangeiras individuais, o modelo deve considerar as seguintes restrições referenciais:
 
 ```text
 (id_corrida, id_equipe)
+    → PARTICIPACAO(id_corrida, id_equipe)
 ```
 
-deve corresponder a uma participação existente em `PARTICIPACAO`.
+Essa referência garante que uma equipe somente possa registrar uma passagem em uma corrida da qual realmente participa.
 
-A combinação:
+Também deve ser garantida a correspondência entre o checkpoint e a corrida:
+
+```text
+(id_corrida, id_checkpoint)
+    → CHECKPOINT(id_corrida, id_checkpoint)
+```
+
+E a correspondência entre o checkpoint e o professor responsável:
 
 ```text
 (id_checkpoint, id_professor)
+    → CHECKPOINT(id_checkpoint, id_professor)
 ```
 
-deve corresponder ao professor responsável pelo checkpoint.
-
-Além disso, a combinação:
-
-```text
-(id_corrida, id_equipe, id_checkpoint)
-```
-
-é única, impedindo que a mesma equipe tenha mais de uma passagem no mesmo checkpoint da mesma corrida.
+Dessa forma, o modelo representa as regras que impedem uma passagem com equipe não participante, checkpoint pertencente a outra corrida ou professor que não seja o responsável pelo checkpoint.
 
 ## 📊 Cardinalidades
 
-As principais cardinalidades do modelo são:
+As cardinalidades representam também a participação mínima e máxima de cada entidade:
 
-* Uma **corrida** pode possuir de **0 a N checkpoints**, enquanto cada checkpoint pertence a **1 corrida**.
-* Um **professor** pode ser responsável por **0 a N checkpoints**, enquanto cada checkpoint possui **1 professor responsável**.
-* Uma **equipe** pode participar de **0 a N corridas**.
-* Uma **corrida** pode receber **0 a N equipes**.
-* Cada registro de `PARTICIPACAO` pertence obrigatoriamente a **1 equipe** e **1 corrida**.
-* Uma corrida, equipe, checkpoint ou professor pode existir antes de qualquer passagem.
-* Cada `PASSAGEM` está obrigatoriamente relacionada a **1 corrida**, **1 equipe**, **1 checkpoint** e **1 professor**.
+- Uma **corrida** pode possuir **0..N checkpoints**, enquanto cada **checkpoint** pertence a **1..1 corrida**.
+- Um **professor** pode ser responsável por **0..N checkpoints**, enquanto cada **checkpoint** possui **1..1 professor responsável**.
+- Uma **equipe** pode participar de **0..N corridas** e uma **corrida** pode receber **0..N equipes**.
+- Cada registro de **PARTICIPACAO** pertence obrigatoriamente a **1..1 corrida** e **1..1 equipe**.
+- Uma corrida pode possuir **0..N passagens**.
+- Uma equipe pode possuir **0..N passagens**.
+- Um checkpoint pode possuir **0..N passagens**.
+- Um professor pode estar relacionado a **0..N passagens**.
+- Cada **PASSAGEM** está obrigatoriamente associada a **1..1 corrida**, **1..1 equipe**, **1..1 checkpoint** e **1..1 professor**.
+
+As cardinalidades do diagrama utilizam a notação de relacionamento do Mermaid ER Diagram, na qual `||` representa uma ocorrência obrigatória única e `o{` representa zero ou muitas ocorrências.
+
+## 🔒 Principais regras de integridade
+
+O sistema considera as seguintes regras:
+
+1. Corridas, equipes e professores não podem possuir nomes duplicados.
+2. Cada checkpoint pertence a uma única corrida.
+3. Cada checkpoint possui um único professor responsável.
+4. O número do checkpoint não pode se repetir dentro da mesma corrida.
+5. Uma equipe pode participar de várias corridas.
+6. Uma corrida pode possuir várias equipes.
+7. Uma equipe deve estar previamente vinculada à corrida antes que uma passagem seja registrada.
+8. O checkpoint utilizado em uma passagem deve pertencer à corrida informada.
+9. O professor informado na passagem deve ser o responsável pelo checkpoint.
+10. Não pode existir mais de uma passagem da mesma equipe no mesmo checkpoint da mesma corrida.
+11. O momento da passagem deve ser armazenado para permitir consultas e acompanhamento do histórico.
+
+As regras relacionadas ao registro de passagens são atualmente verificadas pela camada de serviços da aplicação. Na futura implementação do banco de dados, as restrições referenciais compostas deverão manter essas mesmas regras de integridade.
 
 ## ▶️ Como executar
 
@@ -255,25 +292,27 @@ python main.py
 
 ## 🧪 Testes
 
-Para executar o fluxo de testes:
+Para executar os testes:
 
 ```bash
 python testes/test_fluxo.py
 ```
 
-Os testes contemplam:
+Os testes incluem:
 
-* cadastro de corrida, equipe e professor;
-* cadastro de checkpoint;
-* participação da equipe na corrida;
-* registro de passagem;
-* consultas por corrida, equipe e checkpoint;
-* tentativa de repetir uma passagem;
-* tentativa de registrar passagem de equipe que não participa da corrida.
+- cadastro de corrida, equipe e professor;
+- cadastro de checkpoint;
+- participação de equipe em corrida;
+- registro de passagem;
+- consultas de passagens;
+- tentativa de repetir uma passagem;
+- tentativa de registrar passagem para equipe que não participa da corrida;
+- validação de checkpoint e corrida;
+- validação de professor e checkpoint.
 
 ## 📚 Referência
 
-O diagrama entidade-relacionamento deste README utiliza a sintaxe Mermaid ER Diagram, incorporada diretamente ao Markdown para permitir sua renderização no GitHub.
+O diagrama entidade-relacionamento foi desenvolvido utilizando a sintaxe **Entity Relationship Diagram (ER)** do Mermaid e está incorporado diretamente neste arquivo `README.md`.
 
 Documentação oficial do Mermaid:
 
