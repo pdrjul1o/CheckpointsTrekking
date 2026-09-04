@@ -1,290 +1,183 @@
 from interface.tela import Tela
+from servicos import ServicosTrekking
 
 from excecoes import (
+    CheckpointCorridaInvalidaError,
+    CheckpointNaoEncontradoError,
     CorridaNaoEncontradaError,
     EquipeNaoEncontradaError,
-    CheckpointNaoEncontradoError,
-    ProfessorNaoEncontradoError,
     EquipeNaoParticipanteError,
-    PassagemJaRegistradaError
+    PassagemJaRegistradaError,
+    ProfessorCheckpointInvalidoError,
 )
 
 
 class TelaPassagens(Tela):
-    """
-    Tela responsável pelas operações das passagens.
-    """
+    """Tela responsável pelas operações das passagens."""
+
+    def __init__(self, servicos: ServicosTrekking) -> None:
+        super().__init__(servicos)
 
     def exibir(self) -> None:
+        """Exibe a listagem de passagens."""
         self.listar()
 
     def registrar(self) -> None:
-
+        """Solicita dados e registra uma passagem."""
         self.mostrar_titulo("REGISTRAR PASSAGEM")
-
         try:
-            corridas = self._trekking.listar_corridas()
-
             print("Corridas:")
-
-            for indice, corrida in enumerate(corridas):
+            for indice, corrida in enumerate(self._servicos.corridas.listar()):
                 print(f"{indice} - {corrida.nome}")
-
-            indice_corrida = int(
-                input("Escolha a corrida: ")
+            corrida = self._servicos.corridas.buscar(
+                int(input("Escolha a corrida: "))
             )
-
-            corrida = self._trekking.buscar_corrida(
-                indice_corrida
-            )
-
-            equipes = self._trekking.listar_equipes()
 
             print()
             print("Equipes:")
-
-            for indice, equipe in enumerate(equipes):
+            for indice, equipe in enumerate(self._servicos.equipes.listar()):
                 print(f"{indice} - {equipe.nome}")
-
-            indice_equipe = int(
-                input("Escolha a equipe: ")
+            equipe = self._servicos.equipes.buscar(
+                int(input("Escolha a equipe: "))
             )
-
-            equipe = self._trekking.buscar_equipe(
-                indice_equipe
-            )
-
-            checkpoints = corrida.checkpoints
 
             print()
             print("Checkpoints da corrida:")
-
+            checkpoints = corrida.checkpoints
+            if not checkpoints:
+                print("Essa corrida não possui checkpoints.")
+                return
             for indice, checkpoint in enumerate(checkpoints):
-                print(
-                    f"{indice} - "
-                    f"Checkpoint {checkpoint.numero}"
-                )
+                print(f"{indice} - Checkpoint {checkpoint.numero}")
 
-            indice_checkpoint = int(
-                input("Escolha o checkpoint: ")
-            )
+            try:
+                checkpoint = checkpoints[
+                    int(input("Escolha o checkpoint: "))
+                ]
+            except IndexError as erro:
+                raise CheckpointNaoEncontradoError(
+                    "Checkpoint inválido."
+                ) from erro
 
-            checkpoint = checkpoints[indice_checkpoint]
+            print(f"Professor responsável: {checkpoint.professor.nome}")
+            momento = input("Momento da passagem (ex: 09:42): ")
 
-            print()
-            print(
-                f"Professor responsável: "
-                f"{checkpoint.professor.nome}"
-            )
-
-            momento = input(
-                "Momento da passagem (ex: 09:42): "
-            )
-
-            passagem = self._trekking.registrar_passagem(
+            passagem = self._servicos.passagens.registrar(
                 corrida,
                 equipe,
                 checkpoint,
                 checkpoint.professor,
-                momento
+                momento,
             )
 
             print()
             print("Passagem registrada:")
             print(passagem)
-
         except (
             ValueError,
             CorridaNaoEncontradaError,
             EquipeNaoEncontradaError,
-            CheckpointNaoEncontradoError,
-            ProfessorNaoEncontradoError,
+            CheckpointCorridaInvalidaError,
+    CheckpointNaoEncontradoError,
             EquipeNaoParticipanteError,
-            PassagemJaRegistradaError
+            PassagemJaRegistradaError,
+    ProfessorCheckpointInvalidoError,
         ) as erro:
             print(erro)
 
     def listar(self) -> None:
-
+        """Exibe todas as passagens registradas."""
         self.mostrar_titulo("PASSAGENS REGISTRADAS")
-
-        try:
-            passagens = self._trekking.listar_passagens()
-
-            for indice, passagem in enumerate(passagens):
-                print(
-                    f"{indice} - {passagem}"
-                )
-
-        except Exception as erro:
-            print(erro)
+        for indice, passagem in enumerate(self._servicos.passagens.listar()):
+            print(f"{indice} - {passagem}")
 
     def listar_corrida(self) -> None:
-
-        self.mostrar_titulo(
-            "PASSAGENS DA CORRIDA"
-        )
-
+        """Exibe as passagens de uma corrida."""
+        self.mostrar_titulo("PASSAGENS DA CORRIDA")
         try:
-            corridas = self._trekking.listar_corridas()
-
-            for indice, corrida in enumerate(corridas):
+            for indice, corrida in enumerate(self._servicos.corridas.listar()):
                 print(f"{indice} - {corrida.nome}")
+            corrida = self._servicos.corridas.buscar(
+                int(input("Escolha a corrida: "))
+            )
+            passagens = self._servicos.passagens.listar_por_corrida(corrida)
 
-            indice = int(
-                input("Escolha a corrida: ")
+            if not passagens:
+                print("Nenhuma passagem registrada.")
+                return
+            for passagem in passagens:
+                print(passagem)
+        except (ValueError, CorridaNaoEncontradaError) as erro:
+            print(erro)
+
+    def progressao_equipe(self) -> None:
+        """Exibe a progressão registrada de uma equipe."""
+        self.mostrar_titulo("PROGRESSÃO DA EQUIPE")
+        try:
+            for indice, equipe in enumerate(self._servicos.equipes.listar()):
+                print(f"{indice} - {equipe.nome}")
+            equipe = self._servicos.equipes.buscar(
+                int(input("Escolha a equipe: "))
+            )
+            if not equipe.passagens:
+                print("Nenhuma passagem registrada.")
+                return
+
+            print()
+            print(f"Equipe: {equipe.nome}")
+            print()
+            for passagem in equipe.passagens:
+                print(
+                    f"Checkpoint {passagem.checkpoint.numero} - "
+                    f"{passagem.momento}"
+                )
+        except (ValueError, EquipeNaoEncontradaError) as erro:
+            print(erro)
+
+    def listar_checkpoint(self) -> None:
+        """Exibe as passagens de um checkpoint."""
+        self.mostrar_titulo("PASSAGENS DO CHECKPOINT")
+        try:
+            for indice, checkpoint in enumerate(
+                self._servicos.checkpoints.listar()
+            ):
+                print(f"{indice} - Checkpoint {checkpoint.numero}")
+            checkpoint = self._servicos.checkpoints.buscar(
+                int(input("Escolha o checkpoint: "))
+            )
+            passagens = self._servicos.passagens.listar_por_checkpoint(
+                checkpoint
             )
 
-            corrida = self._trekking.buscar_corrida(indice)
+            if not passagens:
+                print("Nenhuma passagem registrada.")
+                return
+            for passagem in passagens:
+                print(
+                    f"{passagem.equipe.nome} - {passagem.momento}"
+                )
+        except (ValueError, CheckpointNaoEncontradoError) as erro:
+            print(erro)
 
-            passagens = self._trekking.listar_passagens_corrida(
-                corrida
+    def historico_equipe(self) -> None:
+        """Exibe o histórico de uma equipe."""
+        self.mostrar_titulo("HISTÓRICO DA EQUIPE")
+        try:
+            for indice, equipe in enumerate(self._servicos.equipes.listar()):
+                print(f"{indice} - {equipe.nome}")
+            equipe = self._servicos.equipes.buscar(
+                int(input("Escolha a equipe: "))
             )
+            passagens = self._servicos.passagens.listar_por_equipe(equipe)
 
             if not passagens:
                 print("Nenhuma passagem registrada.")
                 return
 
             for passagem in passagens:
-                print(passagem)
-
-        except (
-            ValueError,
-            CorridaNaoEncontradaError
-        ) as erro:
-            print(erro)
-
-    def progressao_equipe(self) -> None:
-
-        self.mostrar_titulo(
-            "PROGRESSÃO DA EQUIPE"
-        )
-
-        try:
-            equipes = self._trekking.listar_equipes()
-
-            for indice, equipe in enumerate(equipes):
-                print(f"{indice} - {equipe.nome}")
-
-            indice = int(
-                input("Escolha a equipe: ")
-            )
-
-            equipe = self._trekking.buscar_equipe(indice)
-
-            if not equipe.passagens:
-                print(
-                    "Nenhuma passagem registrada."
-                )
-                return
-
-            print()
-            print(f"Equipe: {equipe.nome}")
-            print()
-
-            for passagem in equipe.passagens:
-                print(
-                    f"Checkpoint "
-                    f"{passagem.checkpoint.numero} - "
-                    f"{passagem.momento}"
-                )
-
-        except (
-            ValueError,
-            EquipeNaoEncontradaError
-        ) as erro:
-            print(erro)
-
-    def listar_checkpoint(self) -> None:
-
-        self.mostrar_titulo(
-            "PASSAGENS DO CHECKPOINT"
-        )
-
-        try:
-            checkpoints = self._trekking.listar_checkpoints()
-
-            for indice, checkpoint in enumerate(checkpoints):
-                print(
-                    f"{indice} - "
-                    f"Checkpoint {checkpoint.numero}"
-                )
-
-            indice = int(
-                input("Escolha o checkpoint: ")
-            )
-
-            checkpoint = self._trekking.buscar_checkpoint(
-                indice
-            )
-
-            passagens = (
-                self._trekking.listar_passagens_checkpoint(
-                    checkpoint
-                )
-            )
-
-            if not passagens:
-                print(
-                    "Nenhuma passagem registrada."
-                )
-                return
-
-            for passagem in passagens:
-                print(
-                    f"{passagem.equipe.nome} - "
-                    f"{passagem.momento}"
-                )
-
-        except (
-            ValueError,
-            CheckpointNaoEncontradoError
-        ) as erro:
-            print(erro)
-
-    def historico_equipe(self) -> None:
-
-        self.mostrar_titulo(
-            "HISTÓRICO DA EQUIPE"
-        )
-
-        try:
-            equipes = self._trekking.listar_equipes()
-
-            for indice, equipe in enumerate(equipes):
-                print(f"{indice} - {equipe.nome}")
-
-            indice = int(
-                input("Escolha a equipe: ")
-            )
-
-            equipe = self._trekking.buscar_equipe(indice)
-
-            passagens = self._trekking.listar_passagens_equipe(
-                equipe
-            )
-
-            if not passagens:
-                print(
-                    "Nenhuma passagem registrada."
-                )
-                return
-
-            for passagem in passagens:
-                print(
-                    f"Corrida: {passagem.corrida.nome}"
-                )
-                print(
-                    f"Checkpoint: "
-                    f"{passagem.checkpoint.numero}"
-                )
-                print(
-                    f"Horário: {passagem.momento}"
-                )
+                print(f"Corrida: {passagem.corrida.nome}")
+                print(f"Checkpoint: {passagem.checkpoint.numero}")
+                print(f"Horário: {passagem.momento}")
                 print()
-
-        except (
-            ValueError,
-            EquipeNaoEncontradaError
-        ) as erro:
+        except (ValueError, EquipeNaoEncontradaError) as erro:
             print(erro)

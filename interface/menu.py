@@ -1,19 +1,15 @@
 from abc import ABC, abstractmethod
 
-from trekking import Trekking
+from servicos import ServicosTrekking
 
 
 class Menu(ABC):
-    """
-    Classe abstrata que representa um menu da aplicação.
-    """
+    """Classe abstrata que representa um menu da aplicação."""
 
-    def __init__(self, trekking: Trekking) -> None:
-        self._trekking = trekking
+    def __init__(self, servicos: ServicosTrekking) -> None:
+        self._servicos = servicos
 
     @abstractmethod
     def executar(self) -> None:
-        """
-        Executa o menu.
-        """
+        """Executa o menu."""
         pass

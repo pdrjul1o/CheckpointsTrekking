@@ -3,13 +3,11 @@ from interface.telas.tela_equipes import TelaEquipes
 
 
 class MenuEquipes(Menu):
-    """
-    Menu de operações relacionadas às equipes.
-    """
+    """Menu de operações relacionadas às equipes."""
 
     def executar(self) -> None:
-
-        tela = TelaEquipes(self._trekking)
+        """Executa as opções de equipes."""
+        tela = TelaEquipes(self._servicos)
 
         while True:
             print()
@@ -24,24 +22,17 @@ class MenuEquipes(Menu):
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
-
             if opcao == "1":
                 tela.cadastrar()
-
             elif opcao == "2":
                 tela.listar()
-
             elif opcao == "3":
                 tela.consultar()
-
             elif opcao == "4":
                 tela.adicionar_corrida()
-
             elif opcao == "5":
                 tela.historico()
-
             elif opcao == "0":
                 break
-
             else:
                 print("Opção inválida.")

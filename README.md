@@ -1,81 +1,62 @@
-# Sistema de Trekking
+# Checkpoints Trekking — Segunda Versão
 
-Sistema desenvolvido em Python para gerenciamento de corridas de trekking.
+Projeto da segunda etapa, com a camada de serviços introduzida sobre a primeira versão.
 
-## Funcionalidades
+## Estrutura
 
-- Cadastro de corridas
-- Cadastro de equipes
-- Cadastro de professores
-- Cadastro de checkpoints
-- Participação de equipes em corridas
-- Registro de passagem das equipes pelos checkpoints
-- Consulta de passagens por corrida, equipe ou checkpoint
-
-## Como executar
-
-Execute o arquivo principal:
-
-    python main.py
-
-## Estrutura do projeto
-
-O projeto está organizado em módulos e pacotes, separando os modelos, a interface, as regras da aplicação e as exceções do sistema.
-
-Os principais componentes são:
-
-- `modelos/` → contém as classes de Corrida, Equipe, Professor, Checkpoint e Passagem.
-- `interface/` → contém os menus e telas utilizadas para interação com o usuário.
-- `excecoes/` → contém as exceções específicas utilizadas pelo sistema.
-- `trekking.py` → responsável pelas regras e operações principais da aplicação.
-- `main.py` → arquivo responsável por iniciar o sistema.
-
-## Integrantes
-
-Pedro Júlio  
-Francisco Thalys  
-Luiz Guilherme Pereira
-
-## Diagrama Entidade-Relacionamento
-
-```mermaid
-erDiagram
-    PROFESSOR {
-        int id_professor PK
-        string nome
-    }
-    
-    CORRIDA {
-        int id_corrida PK
-        string nome
-        date data_evento
-        int id_professor FK
-    }
-    
-    EQUIPE {
-        int id_equipe PK
-        string nome
-        int id_corrida FK
-    }
-    
-    CHECKPOINT {
-        int id_checkpoint PK
-        string descricao
-        int ordem_trajeto
-        int id_corrida FK
-    }
-    
-    PASSAGEM {
-        int id_passagem PK
-        int id_equipe FK
-        int id_checkpoint FK
-        datetime horario_registro
-    }
-
-    PROFESSOR ||--o{ CORRIDA : "organiza / gerencia"
-    CORRIDA ||--|{ EQUIPE : "inscreve"
-    CORRIDA ||--|{ CHECKPOINT : "possui no trajeto"
-    
-    EQUIPE ||--o{ PASSAGEM : "realiza"
-    CHECKPOINT ||--o{ PASSAGEM : "registra a chegada de"
+```text
+CheckpointsTrekking/
+├── main.py
+├── aplicacao.py
+├── trekking.py
+├── modelos/
+├── servicos/
+├── excecoes/
+├── interface/
+├── testes/
+└── ARQUITETURA.md
 ```
+
+Os dados permanecem somente em memória, usando listas internas da aplicação.
+
+## Execução
+
+No diretório do projeto:
+
+```bash
+python main.py
+```
+
+## Testes
+
+Para executar o fluxo completo e as situações inválidas:
+
+```bash
+python testes/test_fluxo.py
+```
+
+O teste cobre:
+- cadastro de corrida, equipe e professor;
+- cadastro de checkpoint;
+- participação da equipe na corrida;
+- registro de passagem;
+- consultas por corrida, equipe e checkpoint;
+- tentativa de repetir uma passagem;
+- tentativa de registrar passagem de equipe que não participa da corrida.
+
+## Camadas
+
+```text
+Interface
+    ↓
+Serviços
+    ↓
+Aplicação
+    ↓
+Modelos
+    ↓
+Exceções
+```
+
+As telas apresentam mensagens ao usuário. As regras de negócio ficam nos serviços,
+e as exceções personalizadas são capturadas pela interface.

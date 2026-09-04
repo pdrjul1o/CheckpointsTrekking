@@ -1,4 +1,5 @@
 from interface.menu import Menu
+from servicos import ServicosTrekking
 
 from interface.menus.menu_corridas import MenuCorridas
 from interface.menus.menu_equipes import MenuEquipes
@@ -8,12 +9,10 @@ from interface.menus.menu_passagens import MenuPassagens
 
 
 class MenuPrincipal(Menu):
-    """
-    Menu principal da aplicação.
-    """
+    """Menu principal da aplicação."""
 
     def executar(self) -> None:
-
+        """Executa o menu principal até o usuário escolher sair."""
         while True:
             print()
             print("=" * 50)
@@ -29,23 +28,17 @@ class MenuPrincipal(Menu):
             opcao = input("Escolha uma opção: ")
 
             if opcao == "1":
-                MenuCorridas(self._trekking).executar()
-
+                MenuCorridas(self._servicos).executar()
             elif opcao == "2":
-                MenuEquipes(self._trekking).executar()
-
+                MenuEquipes(self._servicos).executar()
             elif opcao == "3":
-                MenuProfessores(self._trekking).executar()
-
+                MenuProfessores(self._servicos).executar()
             elif opcao == "4":
-                MenuCheckpoints(self._trekking).executar()
-
+                MenuCheckpoints(self._servicos).executar()
             elif opcao == "5":
-                MenuPassagens(self._trekking).executar()
-
+                MenuPassagens(self._servicos).executar()
             elif opcao == "0":
                 print("Encerrando o sistema...")
                 break
-
             else:
                 print("Opção inválida.")

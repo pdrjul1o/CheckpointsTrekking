@@ -3,13 +3,11 @@ from interface.telas.tela_corridas import TelaCorridas
 
 
 class MenuCorridas(Menu):
-    """
-    Menu de operações relacionadas às corridas.
-    """
+    """Menu de operações relacionadas às corridas."""
 
     def executar(self) -> None:
-
-        tela = TelaCorridas(self._trekking)
+        """Executa as opções de corridas."""
+        tela = TelaCorridas(self._servicos)
 
         while True:
             print()
@@ -24,24 +22,17 @@ class MenuCorridas(Menu):
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
-
             if opcao == "1":
                 tela.cadastrar()
-
             elif opcao == "2":
                 tela.listar()
-
             elif opcao == "3":
                 tela.consultar()
-
             elif opcao == "4":
                 tela.listar_checkpoints()
-
             elif opcao == "5":
                 tela.listar_passagens()
-
             elif opcao == "0":
                 break
-
             else:
                 print("Opção inválida.")

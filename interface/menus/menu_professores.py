@@ -3,13 +3,11 @@ from interface.telas.tela_professores import TelaProfessores
 
 
 class MenuProfessores(Menu):
-    """
-    Menu de operações relacionadas aos professores.
-    """
+    """Menu de operações relacionadas aos professores."""
 
     def executar(self) -> None:
-
-        tela = TelaProfessores(self._trekking)
+        """Executa as opções de professores."""
+        tela = TelaProfessores(self._servicos)
 
         while True:
             print()
@@ -23,21 +21,15 @@ class MenuProfessores(Menu):
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
-
             if opcao == "1":
                 tela.cadastrar()
-
             elif opcao == "2":
                 tela.listar()
-
             elif opcao == "3":
                 tela.consultar()
-
             elif opcao == "4":
                 tela.listar_checkpoints()
-
             elif opcao == "0":
                 break
-
             else:
                 print("Opção inválida.")

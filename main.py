@@ -1,16 +1,14 @@
-from trekking import Trekking
+from aplicacao import Trekking
 from interface.menus.menu_principal import MenuPrincipal
+from servicos import ServicosTrekking
 
 
 def main() -> None:
-    """
-    Inicia a aplicação.
-    """
+    """Inicializa a aplicação, os serviços e a interface."""
+    aplicacao = Trekking()
+    servicos = ServicosTrekking(aplicacao)
 
-    trekking = Trekking()
-
-    menu = MenuPrincipal(trekking)
-
+    menu = MenuPrincipal(servicos)
     menu.executar()
 
 
