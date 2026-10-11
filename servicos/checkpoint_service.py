@@ -40,6 +40,7 @@ class CheckpointService:
         self.__aplicacao.adicionar_checkpoint(checkpoint)
         corrida.adicionar_checkpoint(checkpoint)
         professor.adicionar_checkpoint(checkpoint)
+        self.__aplicacao.salvar_dados()
         return checkpoint
 
     def listar(self) -> tuple[Checkpoint, ...]:

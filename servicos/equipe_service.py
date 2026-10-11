@@ -52,3 +52,4 @@ class EquipeService:
             corrida.adicionar_equipe(equipe)
         if corrida not in equipe.corridas:
             equipe.adicionar_corrida(corrida)
+        self.__aplicacao.salvar_dados()

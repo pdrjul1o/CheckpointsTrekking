@@ -20,7 +20,7 @@ O sistema permite cadastrar corridas, equipes, professores e checkpoints, além 
 
 Durante uma corrida, cada checkpoint possui um número e um professor responsável. Antes de registrar uma passagem, a equipe deve estar vinculada à corrida. O sistema também verifica se o checkpoint pertence à corrida informada, se o professor é responsável pelo checkpoint e se a mesma equipe já passou por aquele checkpoint.
 
-Atualmente, os dados do sistema são mantidos somente em memória. A estrutura apresentada neste README representa o modelo lógico que servirá como referência para as próximas etapas de implementação do banco de dados.
+Na terceira versão, os dados são carregados e salvos automaticamente em arquivos JSON. O modelo lógico apresentado abaixo continua como referência para a atividade independente de Banco de Dados.
 
 ## ⚙️ Principais funcionalidades
 
@@ -317,3 +317,31 @@ O diagrama entidade-relacionamento foi desenvolvido utilizando a sintaxe **Entit
 Documentação oficial do Mermaid:
 
 https://mermaid.js.org/syntax/entityRelationshipDiagram.html
+
+
+## Banco de dados relacional (nova etapa)
+
+- **SGBD:** MySQL 8.0.16 ou superior.
+- **Banco:** `checkpoints_trekking`.
+- **Script:** [`database.sql`](database.sql) — cria o banco, seis tabelas, restrições e 1.000 registros de testes em uma execução.
+- **Tabelas:** `corrida` (40), `equipe` (180), `professor` (30), `checkpoint` (150), `participacao` (300) e `passagem` (300). **Total: 1.000 registros.**
+- **Relacionamentos:** corridas possuem checkpoints; professores respondem por checkpoints; equipes participam de corridas por `participacao`; passagens associam uma participação a um checkpoint e seu professor responsável.
+- **Integridade:** chaves primárias e estrangeiras, `UNIQUE`, `NOT NULL`, `CHECK` e `DEFAULT` onde cabíveis. Chaves estrangeiras compostas impedem passagem de equipe não inscrita ou por checkpoint/professor incorreto.
+- **Execução:** abra o MySQL 8.0.16+ e execute todo o arquivo `database.sql`. **Atenção:** o script recria as seis tabelas e substitui seus dados.
+
+O DER da atividade anterior foi mantido na seção acima.
+
+
+## Terceira versão — Persistência em JSON
+
+Esta versão evolui a segunda sem modificar as regras de negócio ou a interface. A classe `Trekking` carrega os dados no início e solicita a gravação após alterações. A pasta `persistencia/` converte objetos para JSON e reconstrói suas referências, sem que os serviços manipulem arquivos.
+
+**Arquivos de dados:** `dados/corridas.json`, `dados/equipes.json`, `dados/professores.json`, `dados/checkpoints.json` e `dados/passagens.json`. Os arquivos são criados automaticamente se não existirem. Equipes guardam IDs de corridas; checkpoints guardam IDs de corrida e professor; passagens guardam IDs de corrida, equipe, checkpoint e professor. Esses IDs são reconstruídos em referências aos mesmos objetos na inicialização.
+
+**Executar:** `python main.py` (a partir da raiz do projeto).
+
+**Testar:** `python -m testes.test_persistencia` para verificar gravação, reinício, relações, passagem duplicada, JSON inválido e referência inexistente.
+
+**Versionamento:** `versao-1` (primeira etapa), `versao-2` (serviços), `versao-3` (persistência JSON). As branches devem ser criadas no GitHub a partir das versões corretas; esta entrega contém apenas os arquivos da terceira versão.
+
+**Nota:** A atividade de POO utiliza exclusivamente JSON. O `database.sql` da disciplina de Banco de Dados permanece em sua branch própria e não integra esta versão.

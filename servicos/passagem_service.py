@@ -76,6 +76,7 @@ class PassagemService:
         corrida.adicionar_passagem(passagem)
         equipe.adicionar_passagem(passagem)
         checkpoint.adicionar_passagem(passagem)
+        self.__aplicacao.salvar_dados()
 
         return passagem
 
