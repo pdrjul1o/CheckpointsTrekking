@@ -317,3 +317,16 @@ O diagrama entidade-relacionamento foi desenvolvido utilizando a sintaxe **Entit
 Documentação oficial do Mermaid:
 
 https://mermaid.js.org/syntax/entityRelationshipDiagram.html
+
+
+## Banco de dados relacional (nova etapa)
+
+- **SGBD:** MySQL 8.0.16 ou superior.
+- **Banco:** `checkpoints_trekking`.
+- **Script:** [`database.sql`](database.sql) — cria o banco, seis tabelas, restrições e 1.000 registros de testes em uma execução.
+- **Tabelas:** `corrida` (40), `equipe` (180), `professor` (30), `checkpoint` (150), `participacao` (300) e `passagem` (300). **Total: 1.000 registros.**
+- **Relacionamentos:** corridas possuem checkpoints; professores respondem por checkpoints; equipes participam de corridas por `participacao`; passagens associam uma participação a um checkpoint e seu professor responsável.
+- **Integridade:** chaves primárias e estrangeiras, `UNIQUE`, `NOT NULL`, `CHECK` e `DEFAULT` onde cabíveis. Chaves estrangeiras compostas impedem passagem de equipe não inscrita ou por checkpoint/professor incorreto.
+- **Execução:** abra o MySQL 8.0.16+ e execute todo o arquivo `database.sql`. **Atenção:** o script recria as seis tabelas e substitui seus dados.
+
+O DER da atividade anterior foi mantido na seção acima.
