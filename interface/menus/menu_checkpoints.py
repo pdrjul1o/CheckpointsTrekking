@@ -3,13 +3,11 @@ from interface.telas.tela_checkpoints import TelaCheckpoints
 
 
 class MenuCheckpoints(Menu):
-    """
-    Menu de operações relacionadas aos checkpoints.
-    """
+    """Menu de operações relacionadas aos checkpoints."""
 
     def executar(self) -> None:
-
-        tela = TelaCheckpoints(self._trekking)
+        """Executa as opções de checkpoints."""
+        tela = TelaCheckpoints(self._servicos)
 
         while True:
             print()
@@ -24,24 +22,17 @@ class MenuCheckpoints(Menu):
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
-
             if opcao == "1":
                 tela.cadastrar()
-
             elif opcao == "2":
                 tela.listar()
-
             elif opcao == "3":
                 tela.consultar()
-
             elif opcao == "4":
                 tela.consultar_professor()
-
             elif opcao == "5":
                 tela.listar_equipes()
-
             elif opcao == "0":
                 break
-
             else:
                 print("Opção inválida.")

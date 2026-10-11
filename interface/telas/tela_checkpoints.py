@@ -1,204 +1,125 @@
 from interface.tela import Tela
+from servicos import ServicosTrekking
 
 from excecoes import (
+    CheckpointJaExisteError,
     CheckpointNaoEncontradoError,
     CorridaNaoEncontradaError,
-    ProfessorNaoEncontradoError
+    ProfessorNaoEncontradoError,
 )
 
 
 class TelaCheckpoints(Tela):
-    """
-    Tela responsável pelas operações dos checkpoints.
-    """
+    """Tela responsável pelas operações dos checkpoints."""
+
+    def __init__(self, servicos: ServicosTrekking) -> None:
+        super().__init__(servicos)
 
     def exibir(self) -> None:
+        """Exibe a listagem de checkpoints."""
         self.listar()
 
     def cadastrar(self) -> None:
-
+        """Solicita dados e cadastra um checkpoint."""
         self.mostrar_titulo("CADASTRAR CHECKPOINT")
-
         try:
-            numero = int(
-                input("Número do checkpoint: ")
-            )
-
-            corridas = self._trekking.listar_corridas()
+            numero = int(input("Número do checkpoint: "))
 
             print()
             print("Corridas:")
-
-            for indice, corrida in enumerate(corridas):
+            for indice, corrida in enumerate(self._servicos.corridas.listar()):
                 print(f"{indice} - {corrida.nome}")
-
-            indice_corrida = int(
-                input("Escolha a corrida: ")
+            corrida = self._servicos.corridas.buscar(
+                int(input("Escolha a corrida: "))
             )
-
-            corrida = self._trekking.buscar_corrida(
-                indice_corrida
-            )
-
-            professores = self._trekking.listar_professores()
 
             print()
             print("Professores:")
-
-            for indice, professor in enumerate(professores):
+            for indice, professor in enumerate(
+                self._servicos.professores.listar()
+            ):
                 print(f"{indice} - {professor.nome}")
-
-            indice_professor = int(
-                input("Escolha o professor: ")
+            professor = self._servicos.professores.buscar(
+                int(input("Escolha o professor: "))
             )
 
-            professor = self._trekking.buscar_professor(
-                indice_professor
+            checkpoint = self._servicos.checkpoints.cadastrar(
+                numero, corrida, professor
             )
-
-            checkpoint = self._trekking.cadastrar_checkpoint(
-                numero,
-                corrida,
-                professor
-            )
-
-            print(
-                f"Checkpoint {checkpoint.numero} cadastrado."
-            )
-
+            print(f"Checkpoint {checkpoint.numero} cadastrado.")
         except (
             ValueError,
             CorridaNaoEncontradaError,
-            ProfessorNaoEncontradoError
+            ProfessorNaoEncontradoError,
+            CheckpointJaExisteError,
         ) as erro:
             print(erro)
 
     def listar(self) -> None:
-
+        """Exibe todos os checkpoints cadastrados."""
         self.mostrar_titulo("CHECKPOINTS CADASTRADOS")
-
-        try:
-            checkpoints = self._trekking.listar_checkpoints()
-
-            for indice, checkpoint in enumerate(checkpoints):
-                print(
-                    f"{indice} - "
-                    f"{checkpoint.numero} - "
-                    f"{checkpoint.corrida.nome} - "
-                    f"{checkpoint.professor.nome}"
-                )
-
-        except Exception as erro:
-            print(erro)
+        for indice, checkpoint in enumerate(self._servicos.checkpoints.listar()):
+            print(
+                f"{indice} - {checkpoint.numero} - "
+                f"{checkpoint.corrida.nome} - {checkpoint.professor.nome}"
+            )
 
     def consultar(self) -> None:
-
+        """Exibe os dados de um checkpoint."""
         self.mostrar_titulo("CONSULTAR CHECKPOINT")
-
         try:
-            checkpoints = self._trekking.listar_checkpoints()
+            for indice, checkpoint in enumerate(
+                self._servicos.checkpoints.listar()
+            ):
+                print(f"{indice} - Checkpoint {checkpoint.numero}")
 
-            for indice, checkpoint in enumerate(checkpoints):
-                print(
-                    f"{indice} - "
-                    f"Checkpoint {checkpoint.numero}"
-                )
-
-            indice = int(
-                input("Escolha o checkpoint: ")
+            checkpoint = self._servicos.checkpoints.buscar(
+                int(input("Escolha o checkpoint: "))
             )
-
-            checkpoint = self._trekking.buscar_checkpoint(
-                indice
-            )
-
             print()
             print(f"Checkpoint: {checkpoint.numero}")
             print(f"Corrida: {checkpoint.corrida.nome}")
-            print(
-                f"Professor: {checkpoint.professor.nome}"
-            )
-
-        except (
-            ValueError,
-            CheckpointNaoEncontradoError
-        ) as erro:
+            print(f"Professor: {checkpoint.professor.nome}")
+        except (ValueError, CheckpointNaoEncontradoError) as erro:
             print(erro)
 
     def consultar_professor(self) -> None:
-
-        self.mostrar_titulo(
-            "PROFESSOR RESPONSÁVEL"
-        )
-
+        """Exibe o professor responsável por um checkpoint."""
+        self.mostrar_titulo("PROFESSOR RESPONSÁVEL")
         try:
-            checkpoints = self._trekking.listar_checkpoints()
+            for indice, checkpoint in enumerate(
+                self._servicos.checkpoints.listar()
+            ):
+                print(f"{indice} - Checkpoint {checkpoint.numero}")
 
-            for indice, checkpoint in enumerate(checkpoints):
-                print(
-                    f"{indice} - "
-                    f"Checkpoint {checkpoint.numero}"
-                )
-
-            indice = int(
-                input("Escolha o checkpoint: ")
+            checkpoint = self._servicos.checkpoints.buscar(
+                int(input("Escolha o checkpoint: "))
             )
-
-            checkpoint = self._trekking.buscar_checkpoint(
-                indice
-            )
-
-            print(
-                f"Professor: {checkpoint.professor.nome}"
-            )
-
-        except (
-            ValueError,
-            CheckpointNaoEncontradoError
-        ) as erro:
+            print(f"Professor: {checkpoint.professor.nome}")
+        except (ValueError, CheckpointNaoEncontradoError) as erro:
             print(erro)
 
     def listar_equipes(self) -> None:
-
-        self.mostrar_titulo(
-            "EQUIPES QUE PASSARAM NO CHECKPOINT"
-        )
-
+        """Exibe as equipes que passaram por um checkpoint."""
+        self.mostrar_titulo("EQUIPES QUE PASSARAM NO CHECKPOINT")
         try:
-            checkpoints = self._trekking.listar_checkpoints()
+            for indice, checkpoint in enumerate(
+                self._servicos.checkpoints.listar()
+            ):
+                print(f"{indice} - Checkpoint {checkpoint.numero}")
 
-            for indice, checkpoint in enumerate(checkpoints):
-                print(
-                    f"{indice} - "
-                    f"Checkpoint {checkpoint.numero}"
-                )
-
-            indice = int(
-                input("Escolha o checkpoint: ")
+            checkpoint = self._servicos.checkpoints.buscar(
+                int(input("Escolha o checkpoint: "))
             )
-
-            checkpoint = self._trekking.buscar_checkpoint(
-                indice
-            )
-
-            passagens = self._trekking.listar_passagens_checkpoint(
+            passagens = self._servicos.passagens.listar_por_checkpoint(
                 checkpoint
             )
 
             if not passagens:
-                print(
-                    "Nenhuma equipe passou por esse checkpoint."
-                )
+                print("Nenhuma equipe passou por esse checkpoint.")
                 return
 
             for passagem in passagens:
-                print(
-                    f"{passagem.equipe.nome} - "
-                    f"{passagem.momento}"
-                )
-
-        except (
-            ValueError,
-            CheckpointNaoEncontradoError
-        ) as erro:
+                print(f"{passagem.equipe.nome} - {passagem.momento}")
+        except (ValueError, CheckpointNaoEncontradoError) as erro:
             print(erro)

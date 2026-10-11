@@ -1,14 +1,11 @@
+from modelos.checkpoint import Checkpoint
 from modelos.corrida import Corrida
 from modelos.equipe import Equipe
-from modelos.checkpoint import Checkpoint
 from modelos.professor import Professor
 
 
 class Passagem:
-    """
-    Representa o registro da passagem de uma equipe
-    por um checkpoint durante uma corrida.
-    """
+    """Representa o registro da passagem de uma equipe."""
 
     def __init__(
         self,
@@ -16,48 +13,37 @@ class Passagem:
         equipe: Equipe,
         checkpoint: Checkpoint,
         professor: Professor,
-        momento: str
+        momento: str,
     ) -> None:
-
-        self.__corrida = corrida
-        self.__equipe = equipe
-        self.__checkpoint = checkpoint
-        self.__professor = professor
-        self.__momento = momento
+        self.__corrida: Corrida = corrida
+        self.__equipe: Equipe = equipe
+        self.__checkpoint: Checkpoint = checkpoint
+        self.__professor: Professor = professor
+        self.__momento: str = momento
 
     @property
     def corrida(self) -> Corrida:
-        """
-        Retorna a corrida da passagem.
-        """
+        """Retorna a corrida da passagem."""
         return self.__corrida
 
     @property
     def equipe(self) -> Equipe:
-        """
-        Retorna a equipe da passagem.
-        """
+        """Retorna a equipe da passagem."""
         return self.__equipe
 
     @property
     def checkpoint(self) -> Checkpoint:
-        """
-        Retorna o checkpoint da passagem.
-        """
+        """Retorna o checkpoint da passagem."""
         return self.__checkpoint
 
     @property
     def professor(self) -> Professor:
-        """
-        Retorna o professor responsável pelo registro.
-        """
+        """Retorna o professor responsável pelo registro."""
         return self.__professor
 
     @property
     def momento(self) -> str:
-        """
-        Retorna o momento da passagem.
-        """
+        """Retorna o momento da passagem."""
         return self.__momento
 
     def __str__(self) -> str:

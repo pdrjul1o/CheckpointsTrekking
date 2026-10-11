@@ -3,13 +3,11 @@ from interface.telas.tela_passagens import TelaPassagens
 
 
 class MenuPassagens(Menu):
-    """
-    Menu de operações relacionadas às passagens.
-    """
+    """Menu de operações relacionadas às passagens."""
 
     def executar(self) -> None:
-
-        tela = TelaPassagens(self._trekking)
+        """Executa as opções de passagens."""
+        tela = TelaPassagens(self._servicos)
 
         while True:
             print()
@@ -25,27 +23,19 @@ class MenuPassagens(Menu):
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
-
             if opcao == "1":
                 tela.registrar()
-
             elif opcao == "2":
                 tela.listar()
-
             elif opcao == "3":
                 tela.listar_corrida()
-
             elif opcao == "4":
                 tela.progressao_equipe()
-
             elif opcao == "5":
                 tela.listar_checkpoint()
-
             elif opcao == "6":
                 tela.historico_equipe()
-
             elif opcao == "0":
                 break
-
             else:
                 print("Opção inválida.")

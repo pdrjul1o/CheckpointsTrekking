@@ -9,8 +9,12 @@ from .equipe_nao_encontrada_error import EquipeNaoEncontradaError
 from .professor_ja_existe_error import ProfessorJaExisteError
 from .professor_nao_encontrado_error import ProfessorNaoEncontradoError
 
+from .checkpoint_ja_existe_error import CheckpointJaExisteError
 from .checkpoint_nao_encontrado_error import CheckpointNaoEncontradoError
+from .checkpoint_corrida_invalida_error import CheckpointCorridaInvalidaError
 
 from .equipe_nao_participante_error import EquipeNaoParticipanteError
+
+from .professor_checkpoint_invalido_error import ProfessorCheckpointInvalidoError
 
 from .passagem_ja_registrada_error import PassagemJaRegistradaError
