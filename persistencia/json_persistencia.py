@@ -38,7 +38,7 @@ class PersistenciaJSON:
             for nome, registros in bruto.items():
                 if [r["id"] for r in registros] != list(range(1, len(registros) + 1)):
                     raise ValueError(f"IDs inválidos em {nome}")
-            corridas = [Corrida(r["nome"]) for r in bruto["corridas"]]
+            corridas = [Corrida(r["nome"], r.get("total_checkpoints_previstos", max(1, sum(1 for cp in bruto["checkpoints"] if cp.get("corrida_id") == r["id"])))) for r in bruto["corridas"]]
             equipes = [Equipe(r["nome"]) for r in bruto["equipes"]]
             professores = [Professor(r["nome"]) for r in bruto["professores"]]
             def obter(colecao: list[Any], identificador: int) -> Any:
@@ -88,7 +88,7 @@ class PersistenciaJSON:
             return {obj: i for i, obj in enumerate(itens, 1)}
         ci, ei, pi, ki = ids(corridas), ids(equipes), ids(professores), ids(checkpoints)
         registros: dict[str, list[dict[str, Any]]] = {
-            "corridas": [{"id": ci[c], "nome": c.nome} for c in corridas],
+            "corridas": [{"id": ci[c], "nome": c.nome, "total_checkpoints_previstos": c.total_checkpoints_previstos} for c in corridas],
             "equipes": [{"id": ei[e], "nome": e.nome, "corrida_ids": [ci[c] for c in e.corridas]} for e in equipes],
             "professores": [{"id": pi[p], "nome": p.nome} for p in professores],
             "checkpoints": [{"id": ki[k], "numero": k.numero, "corrida_id": ci[k.corrida], "professor_id": pi[k.professor]} for k in checkpoints],

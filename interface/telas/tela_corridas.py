@@ -20,7 +20,8 @@ class TelaCorridas(Tela):
         nome = input("Nome da corrida: ")
 
         try:
-            corrida = self._servicos.corridas.cadastrar(nome)
+            total = int(input("Total de checkpoints previstos: "))
+            corrida = self._servicos.corridas.cadastrar(nome, total)
             print(f"Corrida cadastrada: {corrida.nome}")
         except (CorridaJaExisteError, ValueError) as erro:
             print(erro)
@@ -29,7 +30,12 @@ class TelaCorridas(Tela):
         """Exibe todas as corridas cadastradas."""
         self.mostrar_titulo("CORRIDAS CADASTRADAS")
         for indice, corrida in enumerate(self._servicos.corridas.listar()):
-            print(f"{indice} - {corrida.nome}")
+            print(
+                f"{indice} - {corrida.nome} | "
+                f"Previstos: {corrida.total_checkpoints_previstos} | "
+                f"Cadastrados com professor responsável: "
+                f"{corrida.total_checkpoints_com_professores}"
+            )
 
     def consultar(self) -> None:
         """Exibe os dados de uma corrida escolhida pelo usuário."""
@@ -44,7 +50,15 @@ class TelaCorridas(Tela):
 
             print()
             print(f"Corrida: {corrida.nome}")
-            print(f"Checkpoints: {len(corrida.checkpoints)}")
+            print(f"Total de checkpoints previstos: {corrida.total_checkpoints_previstos}")
+            responsaveis = self._servicos.corridas.professores_responsaveis(corrida)
+            print(f"Checkpoints cadastrados com professor: {len(responsaveis)}")
+            if not responsaveis:
+                print("Nenhum checkpoint com professor responsável nesta corrida.")
+            else:
+                print("Professores responsáveis pelos checkpoints:")
+                for numero, professor in responsaveis:
+                    print(f"- Checkpoint {numero}: {professor}")
         except (ValueError, CorridaNaoEncontradaError) as erro:
             print(erro)
 

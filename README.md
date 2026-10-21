@@ -20,11 +20,13 @@ O sistema permite cadastrar corridas, equipes, professores e checkpoints, além 
 
 Durante uma corrida, cada checkpoint possui um número e um professor responsável. Antes de registrar uma passagem, a equipe deve estar vinculada à corrida. O sistema também verifica se o checkpoint pertence à corrida informada, se o professor é responsável pelo checkpoint e se a mesma equipe já passou por aquele checkpoint.
 
-Na terceira versão, os dados são carregados e salvos automaticamente em arquivos JSON. O modelo lógico apresentado abaixo continua como referência para a atividade independente de Banco de Dados.
+Desde a terceira versão, os dados são carregados e salvos automaticamente em arquivos JSON. Na quarta versão, o cadastro de corridas também registra a quantidade de checkpoints previstos, que é diferente da quantidade de checkpoints efetivamente cadastrados com professor responsável. O modelo lógico apresentado abaixo continua como referência para a atividade independente de Banco de Dados.
 
 ## ⚙️ Principais funcionalidades
 
-- Cadastro de corridas.
+- Cadastro de corridas com nome e total de checkpoints previstos (inteiro positivo).
+- Listagem de corridas com o total previsto e a quantidade de checkpoints cadastrados com professor responsável.
+- Consulta de corrida com professores responsáveis e seus respectivos checkpoints.
 - Cadastro de equipes.
 - Cadastro de professores.
 - Cadastro de checkpoints.
@@ -54,6 +56,9 @@ CheckpointsTrekking/
 ├── excecoes/
 ├── interface/
 ├── testes/
+├── persistencia/
+├── dados/
+├── README.md
 └── ARQUITETURA.md
 ```
 
@@ -296,6 +301,8 @@ Para executar os testes:
 
 ```bash
 python testes/test_fluxo.py
+python -m testes.test_persistencia
+python -m unittest discover -s testes -p "test_versao4.py" -v
 ```
 
 Os testes incluem:
@@ -342,6 +349,20 @@ Esta versão evolui a segunda sem modificar as regras de negócio ou a interface
 
 **Testar:** `python -m testes.test_persistencia` para verificar gravação, reinício, relações, passagem duplicada, JSON inválido e referência inexistente.
 
-**Versionamento:** `versao-1` (primeira etapa), `versao-2` (serviços), `versao-3` (persistência JSON). As branches devem ser criadas no GitHub a partir das versões corretas; esta entrega contém apenas os arquivos da terceira versão.
+**Versionamento:** `versao-1` (primeira etapa), `versao-2` (serviços), `versao-3` (persistência JSON) e `versao-4` (evolução do cadastro e das consultas de corridas). Esta entrega contém os arquivos da quarta versão.
 
 **Nota:** A atividade de POO utiliza exclusivamente JSON. O `database.sql` da disciplina de Banco de Dados permanece em sua branch própria e não integra esta versão.
+
+
+## Quarta versão — Evolução do Sistema de Corridas (POO)
+
+Esta versão parte do sistema existente e preserva as funcionalidades de equipes, professores, checkpoints, participações e passagens. As mudanças exigidas no Estudo de Caso 4 são:
+
+- **Cadastro de corridas:** além do nome, recebe o total de checkpoints previstos, que deve ser um número inteiro maior que zero.
+- **Listagem de corridas:** mostra o nome da corrida, a quantidade de checkpoints prevista e a quantidade de checkpoints cadastrados com professores responsáveis. O número previsto não aumenta automaticamente ao cadastrar checkpoints.
+- **Consulta de corrida:** mostra o nome, o total previsto e a relação de professores responsáveis, com o número dos respectivos checkpoints, somente para a corrida consultada. Quando não há responsáveis, informa a situação sem gerar erro.
+- **Persistência:** o campo `total_checkpoints_previstos` é gravado em `dados/corridas.json` e recuperado na próxima execução. O carregamento também aceita registros mais antigos sem esse campo.
+
+As validações ficam na lógica do sistema, e não apenas na interface.
+
+**Observação sobre o modelo lógico:** o diagrama ER e o esquema relacional documentados acima pertencem à atividade independente de Banco de Dados, mantida como referência histórica. A nova informação `total_checkpoints_previstos` foi implementada nos objetos Python e na persistência JSON desta atividade de POO; o `database.sql` não foi alterado.
