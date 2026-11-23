@@ -1,143 +1,78 @@
-# Sistema de Trekking
+# CheckpointsTrekking — Projeto de Dados Final
 
-Sistema desenvolvido em Python para auxiliar no gerenciamento e acompanhamento de corridas de trekking.
+**Estudo de caso:** Sistema de Gerenciamento e Acompanhamento de Corridas de Trekking  
+**Turma:** Infoweb 2V  
+**Integrantes:** Pedro Júlio, Francisco Thalys e Luiz Guilherme Pereira  
+**Branch de entrega:** `projeto-dados-final`
 
-## 👥 Equipe
+## 1. Visão geral
 
-**Projeto:** Sistema de Trekking  
-**Turma:** Infoweb 2v
+O CheckpointsTrekking organiza corridas de trekking, equipes, professores responsáveis pelos postos de controle e registros de passagem das equipes pelos checkpoints. Cada corrida possui checkpoints numerados, e cada equipe precisa participar oficialmente da etapa antes que sua passagem possa ser registrada. O professor de cada checkpoint deve corresponder ao responsável cadastrado.
 
-**Integrantes:**
-- Pedro Júlio
-- Francisco Thalys
-- Luiz Guilherme Pereira
+A aplicação foi desenvolvida em Python com divisão entre **modelos**, **serviços**, **interface**, **aplicação**, **exceções** e **persistência JSON**. A quarta versão adicionou o cadastro de `total_checkpoints_previstos` e sua persistência em JSON. O banco relacional apresentado nesta etapa é a base prevista para a futura integração com POO, sem afirmar que o programa Python já utiliza MySQL.
 
-## 📌 Sobre o sistema
+## 2. Banco de dados e evolução
 
-O Sistema de Trekking tem como objetivo auxiliar na organização de corridas de trekking, permitindo o cadastro e o acompanhamento das principais informações envolvidas em uma competição.
+- **SGBD:** MySQL **8.0.16 ou superior** (uso de `CHECK`).
+- **Nome do banco:** `checkpoints_trekking`.
+- **Quantidade de tabelas:** **7** (seis anteriores e `historico_corrida`).
+- **Base anterior preservada:** 1.000 registros, com seus identificadores e comandos de inserção.
+- **Base final:** **4.013 registros** fictícios.
 
-O sistema permite cadastrar corridas, equipes, professores e checkpoints, além de registrar a participação das equipes nas corridas e suas passagens pelos checkpoints.
+### Alterações justificadas
 
-Durante uma corrida, cada checkpoint possui um número e um professor responsável. Antes de registrar uma passagem, a equipe deve estar vinculada à corrida. O sistema também verifica se o checkpoint pertence à corrida informada, se o professor é responsável pelo checkpoint e se a mesma equipe já passou por aquele checkpoint.
+| Entidade | Decisão | Necessidade atendida |
+| --- | --- | --- |
+| `corrida` | `data_realizacao`, `status`, `criado_em` e `total_checkpoints_previstos` | Agenda, situação atual e total de pontos planejados, alinhados à quarta versão em Python. |
+| `participacao` | `status` e `inscrito_em` | Diferenciar inscrição, conclusão, desistência e cancelamento por equipe. |
+| `historico_corrida` | Nova entidade com transição de status, momento, origem e observação | Preservar eventos anteriores sem apagar o estado atual da corrida. |
+| `passagem` | Estrutura temporal e FKs compostas mantidas | Registrar quando a equipe chegou ao posto, com controle de duplicidade e de responsável. |
+| `checkpoint`, `equipe`, `professor` | Estruturas principais mantidas | Os campos e relacionamentos existentes atendem às regras do estudo de caso. |
 
-Desde a terceira versão, os dados são carregados e salvos automaticamente em arquivos JSON. Na quarta versão, o cadastro de corridas também registra a quantidade de checkpoints previstos, que é diferente da quantidade de checkpoints efetivamente cadastrados com professor responsável. O modelo lógico apresentado abaixo continua como referência para a atividade independente de Banco de Dados.
+**Dados legados:** `corrida.data_realizacao` foi inferida da primeira passagem de cada corrida antiga. Como a base anterior não registrava os horários de criação e inscrição nem o número originalmente previsto de checkpoints, esses campos permanecem `NULL` nos registros legados correspondentes, em vez de receber dados históricos inventados. As 40 entradas legadas de `historico_corrida` representam um **estado importado**, não transições de usuários. Os novos registros possuem situações e datas variadas e transições simuladas coerentes.
 
-## ⚙️ Principais funcionalidades
+## 3. Modelo entidade-relacionamento
 
-- Cadastro de corridas com nome e total de checkpoints previstos (inteiro positivo).
-- Listagem de corridas com o total previsto e a quantidade de checkpoints cadastrados com professor responsável.
-- Consulta de corrida com professores responsáveis e seus respectivos checkpoints.
-- Cadastro de equipes.
-- Cadastro de professores.
-- Cadastro de checkpoints.
-- Associação de equipes às corridas.
-- Registro de passagem das equipes pelos checkpoints.
-- Consulta de corridas.
-- Consulta de equipes.
-- Consulta de professores.
-- Consulta de checkpoints.
-- Consulta de passagens por corrida, equipe ou checkpoint.
-- Controle de nomes duplicados.
-- Controle de checkpoints com números duplicados dentro da mesma corrida.
-- Controle de passagens duplicadas.
-- Validação da participação da equipe antes do registro de uma passagem.
-- Validação de que o checkpoint pertence à corrida.
-- Validação de que o professor é responsável pelo checkpoint.
-
-## 📁 Estrutura do projeto
-
-```text
-CheckpointsTrekking/
-├── main.py
-├── aplicacao.py
-├── trekking.py
-├── modelos/
-├── servicos/
-├── excecoes/
-├── interface/
-├── testes/
-├── persistencia/
-├── dados/
-├── README.md
-└── ARQUITETURA.md
-```
-
-O projeto foi organizado em camadas para separar as responsabilidades do sistema:
-
-```text
-Interface
-    ↓
-Serviços
-    ↓
-Aplicação
-    ↓
-Modelos
-    ↓
-Exceções
-```
-
-### Responsabilidades das camadas
-
-- **Interface:** apresenta menus, recebe informações do usuário e exibe os resultados.
-- **Serviços:** concentram as operações e as regras de negócio.
-- **Aplicação:** mantém as coleções de dados em memória e centraliza o armazenamento durante a execução.
-- **Modelos:** representam Corrida, Equipe, Professor, Checkpoint e Passagem.
-- **Exceções:** representam situações inválidas previstas pelas regras do sistema.
-
-## 🗄️ Modelo lógico do banco de dados
-
-O modelo lógico abaixo representa a estrutura que será utilizada como referência para a futura implementação do banco de dados.
-
-As principais relações são:
-
-- **CORRIDA:** representa as corridas cadastradas.
-- **EQUIPE:** representa as equipes participantes.
-- **PROFESSOR:** representa os professores responsáveis pelos checkpoints.
-- **CHECKPOINT:** representa os pontos de controle de uma corrida.
-- **PARTICIPACAO:** resolve o relacionamento muitos-para-muitos entre equipes e corridas.
-- **PASSAGEM:** representa o evento de uma equipe passando por um checkpoint.
-
-## 🔗 Diagrama ER
+![DER atualizado do projeto](der_atualizado.png)
 
 ```mermaid
 erDiagram
-
     CORRIDA ||--o{ CHECKPOINT : possui
-    PROFESSOR ||--o{ CHECKPOINT : responsavel
+    PROFESSOR ||--o{ CHECKPOINT : supervisiona
     CORRIDA ||--o{ PARTICIPACAO : recebe
-    EQUIPE ||--o{ PARTICIPACAO : participa
-    CORRIDA ||--o{ PASSAGEM : registra
-    EQUIPE ||--o{ PASSAGEM : realiza
+    EQUIPE ||--o{ PARTICIPACAO : realiza
+    PARTICIPACAO ||--o{ PASSAGEM : registra
     CHECKPOINT ||--o{ PASSAGEM : recebe
-    PROFESSOR ||--o{ PASSAGEM : registra
+    CORRIDA ||--o{ HISTORICO_CORRIDA : historiza
 
     CORRIDA {
         int id_corrida PK
-        string nome UK
+        varchar nome UK
+        date data_realizacao
+        int total_checkpoints_previstos
+        varchar status
+        datetime criado_em
     }
-
     EQUIPE {
         int id_equipe PK
-        string nome UK
+        varchar nome UK
     }
-
     PROFESSOR {
         int id_professor PK
-        string nome UK
+        varchar nome UK
     }
-
     CHECKPOINT {
         int id_checkpoint PK
         int numero
         int id_corrida FK
         int id_professor FK
     }
-
     PARTICIPACAO {
-        int id_corrida PK, FK
-        int id_equipe PK, FK
+        int id_corrida PK,FK
+        int id_equipe PK,FK
+        varchar status
+        datetime inscrito_em
     }
-
     PASSAGEM {
         int id_passagem PK
         int id_corrida FK
@@ -146,223 +81,88 @@ erDiagram
         int id_professor FK
         datetime momento
     }
+    HISTORICO_CORRIDA {
+        int id_historico PK
+        int id_corrida FK
+        varchar status_anterior
+        varchar status_novo
+        datetime momento
+        varchar origem
+        varchar observacao
+    }
 ```
 
-## 🔑 Estrutura das relações
+**Chaves e cardinalidades:** `corrida` e `equipe` formam relação N:M por `participacao` (PK composta). Cada `checkpoint` pertence a uma única `corrida` e possui um `professor`. Cada `passagem` referencia uma participação válida, e a FK composta para `checkpoint` obriga coincidência entre a corrida e o professor responsável. A restrição `UNIQUE(id_corrida, id_equipe, id_checkpoint)` impede registros duplicados no mesmo posto. Uma `corrida` pode ter vários eventos de histórico.
 
-### CORRIDA
+## 4. Massa de dados fictícios
+
+| Tabela | Registros finais |
+| --- | ---: |
+| `corrida` | 85 |
+| `equipe` | 330 |
+| `professor` | 48 |
+| `checkpoint` | 410 |
+| `participacao` | 1.060 |
+| `passagem` | 1.930 |
+| `historico_corrida` | 150 |
+| **Total** | **4.013** |
+
+Os dados originais (40 corridas, 180 equipes, 30 professores, 150 checkpoints, 300 participações e 300 passagens) foram mantidos. Foram acrescentados **3.013 registros** em categorias, datas e períodos plausíveis. A geração de dados contou com auxílio de IA e roteiro determinístico; a verificação automatizada conferiu quantidade de registros, FKs, unicidade, relações de passagens, coerência temporal e transições de histórico em ambiente de testes. O script fornecido é autocontido: não depende dos arquivos auxiliares usados na geração.
+
+## 5. Relatórios SQL
+
+O arquivo [**relatorios.pdf**](relatorios.pdf) apresenta a finalidade, os atributos, os resultados esperados, a utilidade e a consulta SQL completa para:
+
+1. **Panorama mensal das corridas:** etapas por mês e situação (`COUNT`, `CASE`, `SUM`, `GROUP BY`).
+2. **Progresso das equipes por corrida:** checkpoints atravessados em relação aos cadastrados (`JOIN`, `COUNT DISTINCT`, `HAVING`).
+3. **Checkpoints de maior movimento:** equipes atendidas e horários de maior movimentação (`JOIN`, `MIN`, `MAX`, `ORDER BY`).
+4. **Auditoria das mudanças de situação:** evolução dos estados das corridas (`JOIN`, `WHERE`, `ORDER BY`).
+
+As consultas são compatíveis com MySQL 8.0.16+ e têm exemplos de saída derivados da massa de dados.
+
+## 6. Planejamento da versão final em POO
+
+**Classes de domínio:** `Corrida`, `Equipe`, `Professor`, `Checkpoint`, `Passagem`, além de `Participacao` e `HistoricoCorrida` a serem incorporadas à modelagem de objetos. Os serviços devem preservar regras de negócio e encapsular o acesso aos dados por meio de repositórios/DAOs MySQL.
+
+**Funcionalidades prioritárias:** cadastros e consultas de corridas, equipes, professores e checkpoints; definição do total previsto de postos; inscrição de equipes; validação de responsável e de participação antes de registrar passagem; consulta por filtros; atualização de estados; registro e consulta do histórico; quatro relatórios SQL.
+
+**Regras principais:** nomes únicos por tipo; número de checkpoint único em cada corrida; professor responsável obrigatório; participação na corrida antes da passagem; apenas uma passagem por equipe em cada checkpoint; restrições a exclusões de registros vinculados; datas coerentes e situações válidas. Alterações de status devem gerar eventos, preferencialmente dentro da mesma transação.
+
+**Implementação por etapas:** (1) persistência e cadastros, (2) inscrições e passagens, (3) históricos e relatórios, (4) interface integrada e testes. Funcionalidades futuras podem incluir autenticação por perfis, GPS, notificações e integração externa, fora do escopo obrigatório da versão acadêmica.
+
+### Estrutura da aplicação Python existente
 
 ```text
-CORRIDA(
-    id_corrida PK,
-    nome UNIQUE
-)
+main.py / aplicacao.py / trekking.py
+modelos/            objetos de domínio
+servicos/           regras de negócio
+interface/          menus e telas
+excecoes/           erros de domínio
+persistencia/       persistência em JSON na quarta versão
+dados/              arquivos JSON da aplicação
+testes/             testes automatizados
+ARQUITETURA.md      documentação de arquitetura
 ```
 
-Cada corrida possui um identificador próprio e seu nome deve ser único.
+A aplicação continua executável por `python main.py`. Os testes da quarta versão podem ser executados com `python -m unittest discover -s testes -v`.
 
-### EQUIPE
+## 7. Como recriar o banco
 
-```text
-EQUIPE(
-    id_equipe PK,
-    nome UNIQUE
-)
-```
+1. Utilize **MySQL 8.0.16+** em um **ambiente de testes** com permissão de criar o banco `checkpoints_trekking`.
+2. Abra `database.sql` no MySQL Workbench e execute o arquivo integralmente. Alternativamente, no terminal: `mysql -u USUARIO -p < database.sql`.
+3. O script cria o banco (se necessário), remove as sete tabelas desse banco e as recria, preservando no conjunto de inserções os 1.000 dados anteriores, seguidos da expansão.
+4. Execute as consultas de contagem ao final do arquivo: o total esperado é **4.013** registros.
+5. Consulte as quatro consultas analíticas no [relatório em PDF](relatorios.pdf).
 
-Cada equipe possui um identificador próprio e seu nome deve ser único.
+**Atenção:** reexecutar o script recria as tabelas e descarta eventuais mudanças feitas posteriormente nelas. Não execute sobre uma base de produção sem cópia de segurança.
 
-### PROFESSOR
+## 8. Arquivos desta entrega
 
-```text
-PROFESSOR(
-    id_professor PK,
-    nome UNIQUE
-)
-```
+- [`database.sql`](database.sql) — DDL, restrições, dados anteriores e ampliação até 4.013 registros.
+- [`relatorios.pdf`](relatorios.pdf) — análise da evolução, DER, massa de dados, consultas e planejamento POO.
+- [`der_atualizado.png`](der_atualizado.png) — imagem completa do diagrama ER.
+- `README.md` — documentação do estudo de caso e instruções de execução.
 
-Cada professor possui um identificador próprio e seu nome deve ser único.
+## 9. Versionamento
 
-### CHECKPOINT
-
-```text
-CHECKPOINT(
-    id_checkpoint PK,
-    numero,
-    id_corrida FK → CORRIDA.id_corrida,
-    id_professor FK → PROFESSOR.id_professor,
-    UNIQUE(id_corrida, numero)
-)
-```
-
-Cada checkpoint pertence obrigatoriamente a uma corrida e possui um professor responsável.
-
-O número do checkpoint pode aparecer em corridas diferentes, mas não pode ser repetido dentro da mesma corrida.
-
-### PARTICIPACAO
-
-```text
-PARTICIPACAO(
-    id_corrida PK, FK → CORRIDA.id_corrida,
-    id_equipe PK, FK → EQUIPE.id_equipe
-)
-```
-
-A relação `PARTICIPACAO` resolve o relacionamento muitos-para-muitos entre `EQUIPE` e `CORRIDA`.
-
-Uma equipe pode participar de várias corridas e uma corrida pode possuir várias equipes participantes.
-
-### PASSAGEM
-
-```text
-PASSAGEM(
-    id_passagem PK,
-    id_corrida FK,
-    id_equipe FK,
-    id_checkpoint FK,
-    id_professor FK,
-    momento,
-    UNIQUE(id_corrida, id_equipe, id_checkpoint)
-)
-```
-
-A relação `PASSAGEM` representa o registro de uma equipe em um checkpoint durante uma corrida.
-
-Além das chaves estrangeiras individuais, o modelo deve considerar as seguintes restrições referenciais:
-
-```text
-(id_corrida, id_equipe)
-    → PARTICIPACAO(id_corrida, id_equipe)
-```
-
-Essa referência garante que uma equipe somente possa registrar uma passagem em uma corrida da qual realmente participa.
-
-Também deve ser garantida a correspondência entre o checkpoint e a corrida:
-
-```text
-(id_corrida, id_checkpoint)
-    → CHECKPOINT(id_corrida, id_checkpoint)
-```
-
-E a correspondência entre o checkpoint e o professor responsável:
-
-```text
-(id_checkpoint, id_professor)
-    → CHECKPOINT(id_checkpoint, id_professor)
-```
-
-Dessa forma, o modelo representa as regras que impedem uma passagem com equipe não participante, checkpoint pertencente a outra corrida ou professor que não seja o responsável pelo checkpoint.
-
-## 📊 Cardinalidades
-
-As cardinalidades representam também a participação mínima e máxima de cada entidade:
-
-- Uma **corrida** pode possuir **0..N checkpoints**, enquanto cada **checkpoint** pertence a **1..1 corrida**.
-- Um **professor** pode ser responsável por **0..N checkpoints**, enquanto cada **checkpoint** possui **1..1 professor responsável**.
-- Uma **equipe** pode participar de **0..N corridas** e uma **corrida** pode receber **0..N equipes**.
-- Cada registro de **PARTICIPACAO** pertence obrigatoriamente a **1..1 corrida** e **1..1 equipe**.
-- Uma corrida pode possuir **0..N passagens**.
-- Uma equipe pode possuir **0..N passagens**.
-- Um checkpoint pode possuir **0..N passagens**.
-- Um professor pode estar relacionado a **0..N passagens**.
-- Cada **PASSAGEM** está obrigatoriamente associada a **1..1 corrida**, **1..1 equipe**, **1..1 checkpoint** e **1..1 professor**.
-
-As cardinalidades do diagrama utilizam a notação de relacionamento do Mermaid ER Diagram, na qual `||` representa uma ocorrência obrigatória única e `o{` representa zero ou muitas ocorrências.
-
-## 🔒 Principais regras de integridade
-
-O sistema considera as seguintes regras:
-
-1. Corridas, equipes e professores não podem possuir nomes duplicados.
-2. Cada checkpoint pertence a uma única corrida.
-3. Cada checkpoint possui um único professor responsável.
-4. O número do checkpoint não pode se repetir dentro da mesma corrida.
-5. Uma equipe pode participar de várias corridas.
-6. Uma corrida pode possuir várias equipes.
-7. Uma equipe deve estar previamente vinculada à corrida antes que uma passagem seja registrada.
-8. O checkpoint utilizado em uma passagem deve pertencer à corrida informada.
-9. O professor informado na passagem deve ser o responsável pelo checkpoint.
-10. Não pode existir mais de uma passagem da mesma equipe no mesmo checkpoint da mesma corrida.
-11. O momento da passagem deve ser armazenado para permitir consultas e acompanhamento do histórico.
-
-As regras relacionadas ao registro de passagens são atualmente verificadas pela camada de serviços da aplicação. Na futura implementação do banco de dados, as restrições referenciais compostas deverão manter essas mesmas regras de integridade.
-
-## ▶️ Como executar
-
-No diretório do projeto, execute:
-
-```bash
-python main.py
-```
-
-## 🧪 Testes
-
-Para executar os testes:
-
-```bash
-python testes/test_fluxo.py
-python -m testes.test_persistencia
-python -m unittest discover -s testes -p "test_versao4.py" -v
-```
-
-Os testes incluem:
-
-- cadastro de corrida, equipe e professor;
-- cadastro de checkpoint;
-- participação de equipe em corrida;
-- registro de passagem;
-- consultas de passagens;
-- tentativa de repetir uma passagem;
-- tentativa de registrar passagem para equipe que não participa da corrida;
-- validação de checkpoint e corrida;
-- validação de professor e checkpoint.
-
-## 📚 Referência
-
-O diagrama entidade-relacionamento foi desenvolvido utilizando a sintaxe **Entity Relationship Diagram (ER)** do Mermaid e está incorporado diretamente neste arquivo `README.md`.
-
-Documentação oficial do Mermaid:
-
-https://mermaid.js.org/syntax/entityRelationshipDiagram.html
-
-
-## Banco de dados relacional (nova etapa)
-
-- **SGBD:** MySQL 8.0.16 ou superior.
-- **Banco:** `checkpoints_trekking`.
-- **Script:** [`database.sql`](database.sql) — cria o banco, seis tabelas, restrições e 1.000 registros de testes em uma execução.
-- **Tabelas:** `corrida` (40), `equipe` (180), `professor` (30), `checkpoint` (150), `participacao` (300) e `passagem` (300). **Total: 1.000 registros.**
-- **Relacionamentos:** corridas possuem checkpoints; professores respondem por checkpoints; equipes participam de corridas por `participacao`; passagens associam uma participação a um checkpoint e seu professor responsável.
-- **Integridade:** chaves primárias e estrangeiras, `UNIQUE`, `NOT NULL`, `CHECK` e `DEFAULT` onde cabíveis. Chaves estrangeiras compostas impedem passagem de equipe não inscrita ou por checkpoint/professor incorreto.
-- **Execução:** abra o MySQL 8.0.16+ e execute todo o arquivo `database.sql`. **Atenção:** o script recria as seis tabelas e substitui seus dados.
-
-O DER da atividade anterior foi mantido na seção acima.
-
-
-## Terceira versão — Persistência em JSON
-
-Esta versão evolui a segunda sem modificar as regras de negócio ou a interface. A classe `Trekking` carrega os dados no início e solicita a gravação após alterações. A pasta `persistencia/` converte objetos para JSON e reconstrói suas referências, sem que os serviços manipulem arquivos.
-
-**Arquivos de dados:** `dados/corridas.json`, `dados/equipes.json`, `dados/professores.json`, `dados/checkpoints.json` e `dados/passagens.json`. Os arquivos são criados automaticamente se não existirem. Equipes guardam IDs de corridas; checkpoints guardam IDs de corrida e professor; passagens guardam IDs de corrida, equipe, checkpoint e professor. Esses IDs são reconstruídos em referências aos mesmos objetos na inicialização.
-
-**Executar:** `python main.py` (a partir da raiz do projeto).
-
-**Testar:** `python -m testes.test_persistencia` para verificar gravação, reinício, relações, passagem duplicada, JSON inválido e referência inexistente.
-
-**Versionamento:** `versao-1` (primeira etapa), `versao-2` (serviços), `versao-3` (persistência JSON) e `versao-4` (evolução do cadastro e das consultas de corridas). Esta entrega contém os arquivos da quarta versão.
-
-**Nota:** A atividade de POO utiliza exclusivamente JSON. O `database.sql` da disciplina de Banco de Dados permanece em sua branch própria e não integra esta versão.
-
-
-## Quarta versão — Evolução do Sistema de Corridas (POO)
-
-Esta versão parte do sistema existente e preserva as funcionalidades de equipes, professores, checkpoints, participações e passagens. As mudanças exigidas no Estudo de Caso 4 são:
-
-- **Cadastro de corridas:** além do nome, recebe o total de checkpoints previstos, que deve ser um número inteiro maior que zero.
-- **Listagem de corridas:** mostra o nome da corrida, a quantidade de checkpoints prevista e a quantidade de checkpoints cadastrados com professores responsáveis. O número previsto não aumenta automaticamente ao cadastrar checkpoints.
-- **Consulta de corrida:** mostra o nome, o total previsto e a relação de professores responsáveis, com o número dos respectivos checkpoints, somente para a corrida consultada. Quando não há responsáveis, informa a situação sem gerar erro.
-- **Persistência:** o campo `total_checkpoints_previstos` é gravado em `dados/corridas.json` e recuperado na próxima execução. O carregamento também aceita registros mais antigos sem esse campo.
-
-As validações ficam na lógica do sistema, e não apenas na interface.
-
-**Observação sobre o modelo lógico:** o diagrama ER e o esquema relacional documentados acima pertencem à atividade independente de Banco de Dados, mantida como referência histórica. A nova informação `total_checkpoints_previstos` foi implementada nos objetos Python e na persistência JSON desta atividade de POO; o `database.sql` não foi alterado.
+A entrega está organizada para a branch `projeto-dados-final`, no mesmo repositório utilizado nas etapas anteriores, preservando os arquivos, branches e commits já existentes. A base relacional anterior está na branch `banco-de-dados` e a quarta versão da aplicação Python está em `quarta-versao`.
