@@ -19,6 +19,8 @@ class MenuEquipes(Menu):
             print("3 - Consultar equipe")
             print("4 - Adicionar equipe a uma corrida")
             print("5 - Consultar histórico da equipe")
+            print("8 - Atualizar nome")
+            print("9 - Remover registro sem vínculos")
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
@@ -32,6 +34,10 @@ class MenuEquipes(Menu):
                 tela.adicionar_corrida()
             elif opcao == "5":
                 tela.historico()
+            elif opcao == "8":
+                tela.atualizar()
+            elif opcao == "9":
+                tela.remover()
             elif opcao == "0":
                 break
             else:

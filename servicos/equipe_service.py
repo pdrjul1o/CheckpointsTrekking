@@ -37,6 +37,8 @@ class EquipeService:
     def buscar(self, indice: int) -> Equipe:
         """Busca uma equipe pelo índice informado."""
         try:
+            if indice < 0:
+                raise IndexError(indice)
             return self.__aplicacao.equipes[indice]
         except IndexError as erro:
             raise EquipeNaoEncontradaError("Equipe inválida.") from erro
@@ -53,3 +55,22 @@ class EquipeService:
         if corrida not in equipe.corridas:
             equipe.adicionar_corrida(corrida)
         self.__aplicacao.salvar_dados()
+
+    def atualizar(self, indice: int, nome: str) -> Equipe:
+        """Atualiza o nome de um registro, mantendo a unicidade."""
+        objeto = self.buscar(indice)
+        nome = nome.strip()
+        if not nome:
+            raise ValueError("O nome não pode ser vazio.")
+        if any(x is not objeto and x.nome.lower() == nome.lower() for x in self.listar()):
+            raise EquipeJaExisteError("Já existe um registro com esse nome.")
+        objeto.renomear(nome)
+        self.__aplicacao.salvar_dados()
+        return objeto
+
+    def remover(self, indice: int) -> None:
+        """Exclui somente registros sem dependências no sistema."""
+        objeto = self.buscar(indice)
+        if objeto.corridas or objeto.passagens:
+            raise ValueError("Não é possível remover um registro com vínculos.")
+        self.__aplicacao.remover(objeto)

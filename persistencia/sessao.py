@@ -1,14 +1,10 @@
-from contextlib import contextmanager
-from .banco import SessionLocal
+from sqlalchemy.orm import Session
 
-@contextmanager
-def get_session():
-    session = SessionLocal()
+
+def confirmar(sessao: Session) -> None:
+    """Confirma a transação ou desfaz alterações em caso de falha."""
     try:
-        yield session
-        session.commit()
+        sessao.commit()
     except Exception:
-        session.rollback()
+        sessao.rollback()
         raise
-    finally:
-        session.close()

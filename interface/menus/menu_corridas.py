@@ -19,6 +19,8 @@ class MenuCorridas(Menu):
             print("3 - Consultar corrida")
             print("4 - Consultar checkpoints da corrida")
             print("5 - Consultar passagens da corrida")
+            print("8 - Atualizar nome")
+            print("9 - Remover registro sem vínculos")
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
@@ -32,6 +34,10 @@ class MenuCorridas(Menu):
                 tela.listar_checkpoints()
             elif opcao == "5":
                 tela.listar_passagens()
+            elif opcao == "8":
+                tela.atualizar()
+            elif opcao == "9":
+                tela.remover()
             elif opcao == "0":
                 break
             else:

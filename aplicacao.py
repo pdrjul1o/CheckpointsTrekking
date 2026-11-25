@@ -1,81 +1,93 @@
 from pathlib import Path
-from persistencia import PersistenciaJSON
-
+from typing import TypeVar
+from sqlalchemy import select
 from modelos import Corrida, Equipe, Professor, Checkpoint, Passagem
+from modelos.base import Base
+from persistencia import configurar_banco, confirmar
 
+T = TypeVar('T', bound=Base)
 
 class Trekking:
-    """
-    Mantém os dados da aplicação em memória.
-
-    A classe não concentra regras de negócio. Os serviços utilizam
-    os métodos de acesso e inclusão desta classe para trabalhar com
-    as coleções mantidas internamente.
-    """
+    """Centraliza o acesso ORM; os serviços conservam as regras de negócio."""
 
     def __init__(self, diretorio_dados: Path | None = None) -> None:
-        self.__corridas: list[Corrida] = []
-        self.__equipes: list[Equipe] = []
-        self.__professores: list[Professor] = []
-        self.__checkpoints: list[Checkpoint] = []
-        self.__passagens: list[Passagem] = []
-        self.__persistencia = PersistenciaJSON(diretorio_dados or Path(__file__).resolve().parent / "dados")
-        self.carregar_dados()
+        self.__engine, fabrica = configurar_banco(diretorio_dados or Path(__file__).resolve().parent / 'dados')
+        self.__sessao = fabrica()
 
-    def carregar_dados(self) -> None:
-        """Carrega coleções e reconstrói os relacionamentos salvos."""
-        (self.__corridas, self.__equipes, self.__professores,
-         self.__checkpoints, self.__passagens) = self.__persistencia.carregar()
+    def __enter__(self) -> 'Trekking':
+        return self
+
+    def __exit__(self, tipo, erro, traceback) -> None:
+        self.close()
+
+    def close(self) -> None:
+        """Libera a sessão e as conexões ao encerrar a aplicação."""
+        self.__sessao.close()
+        self.__engine.dispose()
 
     def salvar_dados(self) -> None:
-        """Persiste o estado atual, sem expor as listas internas."""
-        self.__persistencia.salvar(self.corridas, self.equipes, self.professores,
-                                  self.checkpoints, self.passagens)
+        """Confirma alterações feitas nos objetos mapeados."""
+        confirmar(self.__sessao)
+
+    def listar(self, modelo: type[T]) -> tuple[T, ...]:
+        """Consulta objetos no banco em ordem de identificação."""
+        return tuple(self.__sessao.scalars(select(modelo).order_by(modelo.id)).all())
+
+    def adicionar(self, objeto: Base) -> None:
+        """Inclui um objeto e confirma a transação."""
+        self.__sessao.add(objeto)
+        self.salvar_dados()
+
+    def remover(self, objeto: Base) -> None:
+        """Remove um objeto previamente validado pelo serviço."""
+        self.__sessao.delete(objeto)
+        self.salvar_dados()
+
+    def filtrar_passagens(self, **filtros: int) -> list[Passagem]:
+        """Consulta passagens pelas chaves informadas pelo serviço."""
+        return list(self.__sessao.scalars(select(Passagem).filter_by(**filtros).order_by(Passagem.id)))
 
     @property
     def corridas(self) -> tuple[Corrida, ...]:
-        """Retorna as corridas cadastradas sem expor a lista interna."""
-        return tuple(self.__corridas)
+        """Retorna os registros de corridas."""
+        return self.listar(Corrida)
+
+    def adicionar_corrida(self, objeto: Corrida) -> None:
+        """Persiste o novo objeto."""
+        self.adicionar(objeto)
 
     @property
     def equipes(self) -> tuple[Equipe, ...]:
-        """Retorna as equipes cadastradas sem expor a lista interna."""
-        return tuple(self.__equipes)
+        """Retorna os registros de equipes."""
+        return self.listar(Equipe)
+
+    def adicionar_equipe(self, objeto: Equipe) -> None:
+        """Persiste o novo objeto."""
+        self.adicionar(objeto)
 
     @property
     def professores(self) -> tuple[Professor, ...]:
-        """Retorna os professores cadastrados sem expor a lista interna."""
-        return tuple(self.__professores)
+        """Retorna os registros de professores."""
+        return self.listar(Professor)
+
+    def adicionar_professor(self, objeto: Professor) -> None:
+        """Persiste o novo objeto."""
+        self.adicionar(objeto)
 
     @property
     def checkpoints(self) -> tuple[Checkpoint, ...]:
-        """Retorna os checkpoints cadastrados sem expor a lista interna."""
-        return tuple(self.__checkpoints)
+        """Retorna os registros de checkpoints."""
+        return self.listar(Checkpoint)
+
+    def adicionar_checkpoint(self, objeto: Checkpoint) -> None:
+        """Persiste o novo objeto."""
+        self.adicionar(objeto)
 
     @property
     def passagens(self) -> tuple[Passagem, ...]:
-        """Retorna as passagens registradas sem expor a lista interna."""
-        return tuple(self.__passagens)
+        """Retorna os registros de passagens."""
+        return self.listar(Passagem)
 
-    def adicionar_corrida(self, corrida: Corrida) -> None:
-        """Adiciona uma corrida à coleção da aplicação."""
-        self.__corridas.append(corrida)
-        self.salvar_dados()
-
-    def adicionar_equipe(self, equipe: Equipe) -> None:
-        """Adiciona uma equipe à coleção da aplicação."""
-        self.__equipes.append(equipe)
-        self.salvar_dados()
-
-    def adicionar_professor(self, professor: Professor) -> None:
-        """Adiciona um professor à coleção da aplicação."""
-        self.__professores.append(professor)
-
-    def adicionar_checkpoint(self, checkpoint: Checkpoint) -> None:
-        """Adiciona um checkpoint à coleção da aplicação."""
-        self.__checkpoints.append(checkpoint)
-        self.salvar_dados()
-
-    def adicionar_passagem(self, passagem: Passagem) -> None:
-        """Adiciona uma passagem à coleção da aplicação."""
-        self.__passagens.append(passagem)
+    def adicionar_passagem(self, objeto: Passagem) -> None:
+        """Persiste o novo objeto."""
+        self.adicionar(objeto)

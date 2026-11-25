@@ -1,21 +1,16 @@
+from sqlalchemy.exc import SQLAlchemyError
 from aplicacao import Trekking
-from persistencia import ErroPersistencia
 from interface.menus.menu_principal import MenuPrincipal
 from servicos import ServicosTrekking
 
 
 def main() -> None:
-    """Inicializa a aplicação, os serviços e a interface."""
+    """Inicializa a aplicação e encerra a sessão ao sair."""
     try:
-        aplicacao = Trekking()
-    except (ErroPersistencia, OSError) as erro:
-        print(f"Não foi possível carregar os dados: {erro}")
-        return
-    servicos = ServicosTrekking(aplicacao)
+        with Trekking() as aplicacao:
+            MenuPrincipal(ServicosTrekking(aplicacao)).executar()
+    except (SQLAlchemyError, OSError) as erro:
+        print(f"Falha de persistência: {erro}")
 
-    menu = MenuPrincipal(servicos)
-    menu.executar()
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

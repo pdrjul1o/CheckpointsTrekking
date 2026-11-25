@@ -33,8 +33,29 @@ class ProfessorService:
     def buscar(self, indice: int) -> Professor:
         """Busca um professor pelo índice informado."""
         try:
+            if indice < 0:
+                raise IndexError(indice)
             return self.__aplicacao.professores[indice]
         except IndexError as erro:
             raise ProfessorNaoEncontradoError(
                 "Professor inválido."
             ) from erro
+
+    def atualizar(self, indice: int, nome: str) -> Professor:
+        """Atualiza o nome de um registro, mantendo a unicidade."""
+        objeto = self.buscar(indice)
+        nome = nome.strip()
+        if not nome:
+            raise ValueError("O nome não pode ser vazio.")
+        if any(x is not objeto and x.nome.lower() == nome.lower() for x in self.listar()):
+            raise ProfessorJaExisteError("Já existe um registro com esse nome.")
+        objeto.renomear(nome)
+        self.__aplicacao.salvar_dados()
+        return objeto
+
+    def remover(self, indice: int) -> None:
+        """Exclui somente registros sem dependências no sistema."""
+        objeto = self.buscar(indice)
+        if objeto.checkpoints or objeto.passagens:
+            raise ValueError("Não é possível remover um registro com vínculos.")
+        self.__aplicacao.remover(objeto)

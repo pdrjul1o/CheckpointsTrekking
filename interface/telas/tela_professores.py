@@ -70,3 +70,24 @@ class TelaProfessores(Tela):
                 )
         except (ValueError, ProfessorNaoEncontradoError) as erro:
             print(erro)
+
+    def atualizar(self) -> None:
+        """Solicita ao usuário a alteração de um nome."""
+        self.listar()
+        try:
+            indice = int(input("Escolha o registro: "))
+            objeto = self._servicos.professores.atualizar(indice, input("Novo nome: "))
+            print(f"Registro atualizado: {objeto.nome}")
+        except (ValueError, ProfessorJaExisteError, ProfessorNaoEncontradoError) as erro:
+            print(erro)
+
+    def remover(self) -> None:
+        """Solicita a exclusão de um registro sem dependências."""
+        self.listar()
+        try:
+            indice = int(input("Escolha o registro: "))
+            if input("Confirmar exclusão? (s/n): ").lower() == "s":
+                self._servicos.professores.remover(indice)
+                print("Registro removido.")
+        except (ValueError, ProfessorNaoEncontradoError) as erro:
+            print(erro)

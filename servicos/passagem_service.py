@@ -73,10 +73,6 @@ class PassagemService:
         )
         self.__aplicacao.adicionar_passagem(passagem)
 
-        corrida.adicionar_passagem(passagem)
-        equipe.adicionar_passagem(passagem)
-        checkpoint.adicionar_passagem(passagem)
-        self.__aplicacao.salvar_dados()
 
         return passagem
 
@@ -86,27 +82,15 @@ class PassagemService:
 
     def listar_por_corrida(self, corrida: Corrida) -> list[Passagem]:
         """Retorna as passagens pertencentes a uma corrida."""
-        return [
-            passagem
-            for passagem in self.__aplicacao.passagens
-            if passagem.corrida == corrida
-        ]
+        return self.__aplicacao.filtrar_passagens(id_corrida=corrida.id)
 
     def listar_por_equipe(self, equipe: Equipe) -> list[Passagem]:
         """Retorna as passagens registradas por uma equipe."""
-        return [
-            passagem
-            for passagem in self.__aplicacao.passagens
-            if passagem.equipe == equipe
-        ]
+        return self.__aplicacao.filtrar_passagens(id_equipe=equipe.id)
 
     def listar_por_checkpoint(
         self,
         checkpoint: Checkpoint,
     ) -> list[Passagem]:
         """Retorna as passagens registradas em um checkpoint."""
-        return [
-            passagem
-            for passagem in self.__aplicacao.passagens
-            if passagem.checkpoint == checkpoint
-        ]
+        return self.__aplicacao.filtrar_passagens(id_checkpoint=checkpoint.id)

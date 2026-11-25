@@ -1,79 +1,80 @@
-"""Testes da terceira versão: gravação, recarga e falhas de persistência."""
-import json
+"""Testes de integração com SQLite e ORM, em bancos isolados."""
+import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
-
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
 from aplicacao import Trekking
-from excecoes import PassagemJaRegistradaError
-from persistencia import ErroPersistencia
+from persistencia import configurar_banco
 from servicos import ServicosTrekking
+from excecoes import (PassagemJaRegistradaError, EquipeNaoParticipanteError,
+    CheckpointCorridaInvalidaError, ProfessorCheckpointInvalidoError,
+    EquipeJaExisteError, CheckpointJaExisteError)
 
+class TesteORM(unittest.TestCase):
+    def setUp(self):
+        pasta = TemporaryDirectory()
+        self.addCleanup(pasta.cleanup)
+        self.pasta = Path(pasta.name)
+        self.app = Trekking(self.pasta)
+        self.addCleanup(self.app.close)
+        self.s = ServicosTrekking(self.app)
 
-def testar_reinicio_e_relacionamentos() -> None:
-    """Cadastra, grava, reinicia e recupera relações entre os objetos."""
-    with TemporaryDirectory() as pasta:
-        diretorio = Path(pasta)
-        app = Trekking(diretorio)
-        servicos = ServicosTrekking(app)
-        corrida = servicos.corridas.cadastrar('Trilha Persistente')
-        equipe = servicos.equipes.cadastrar('Equipe Aurora')
-        professor = servicos.professores.cadastrar('Professor Paulo')
-        checkpoint = servicos.checkpoints.cadastrar(1, corrida, professor)
-        servicos.equipes.adicionar_a_corrida(equipe, corrida)
-        servicos.passagens.registrar(corrida, equipe, checkpoint, professor, '10:15')
+    def fluxo(self):
+        c = self.s.corridas.cadastrar('Trilha IFRN', 4)
+        e = self.s.equipes.cadastrar('Trilheiros')
+        p = self.s.professores.cadastrar('Monitor A')
+        cp = self.s.checkpoints.cadastrar(1, c, p)
+        self.s.equipes.adicionar_a_corrida(e, c)
+        return c, e, p, cp
 
-        recarregada = Trekking(diretorio)
-        nova_corrida, = recarregada.corridas
-        nova_equipe, = recarregada.equipes
-        novo_professor, = recarregada.professores
-        novo_checkpoint, = recarregada.checkpoints
-        nova_passagem, = recarregada.passagens
-        assert nova_corrida in nova_equipe.corridas
-        assert nova_equipe in nova_corrida.equipes
-        assert novo_checkpoint.corrida is nova_corrida
-        assert novo_checkpoint.professor is novo_professor
-        assert nova_passagem in nova_corrida.passagens
-        assert nova_passagem in nova_equipe.passagens
-        assert nova_passagem in novo_checkpoint.passagens
-        assert nova_passagem.professor is novo_professor
+    def test_reinicio_relacionamentos(self):
+        c,e,p,cp = self.fluxo()
+        x = self.s.passagens.registrar(c,e,cp,p,'09:42')
+        self.assertIn(x, self.s.passagens.listar_por_corrida(c))
+        self.app.close()
+        with Trekking(self.pasta) as a:
+            c,e,p,cp,x = a.corridas[0],a.equipes[0],a.professores[0],a.checkpoints[0],a.passagens[0]
+            self.assertIn(e,c.equipes)
+            self.assertIn(c,e.corridas)
+            self.assertIn(cp,p.checkpoints)
+            self.assertIs(cp.corrida,c)
+            self.assertIs(x.professor,p)
+            self.assertIn(x,cp.passagens)
+            self.assertEqual(x.momento,'09:42')
+
+    def test_regras(self):
+        c,e,p,cp = self.fluxo()
+        self.s.equipes.adicionar_a_corrida(e,c)
+        self.assertEqual(len(c.equipes),1)
+        with self.assertRaises(EquipeJaExisteError): self.s.equipes.cadastrar('trilheiros')
+        with self.assertRaises(CheckpointJaExisteError): self.s.checkpoints.cadastrar(1,c,p)
+        fora = self.s.equipes.cadastrar('Fora')
+        outro = self.s.professores.cadastrar('Outro')
+        outra = self.s.corridas.cadastrar('Outra')
+        with self.assertRaises(EquipeNaoParticipanteError): self.s.passagens.registrar(c,fora,cp,p,'10:00')
+        with self.assertRaises(ProfessorCheckpointInvalidoError): self.s.passagens.registrar(c,e,cp,outro,'10:00')
+        with self.assertRaises(CheckpointCorridaInvalidaError): self.s.passagens.registrar(outra,e,cp,p,'10:00')
+        self.s.passagens.registrar(c,e,cp,p,'10:00')
+        with self.assertRaises(PassagemJaRegistradaError): self.s.passagens.registrar(c,e,cp,p,'10:01')
+        self.assertEqual(len(self.s.passagens.listar()),1)
+
+    def test_atualizacao_remocao(self):
+        self.fluxo()
+        self.s.equipes.cadastrar('Temporária')
+        self.s.equipes.atualizar(1,'Renomeada')
+        with Trekking(self.pasta) as a: self.assertEqual(a.equipes[1].nome,'Renomeada')
+        with self.assertRaises(ValueError): self.s.equipes.remover(0)
+        self.s.equipes.remover(1)
+        with Trekking(self.pasta) as a: self.assertEqual(len(a.equipes),1)
+
+    def test_fk_ativa(self):
+        engine, fabrica = configurar_banco(self.pasta)
         try:
-            ServicosTrekking(recarregada).passagens.registrar(nova_corrida, nova_equipe, novo_checkpoint, novo_professor, '11:00')
-        except PassagemJaRegistradaError:
-            pass
-        else:
-            raise AssertionError('Registro duplicado deveria ser rejeitado')
+            with fabrica() as sessao:
+                with self.assertRaises(IntegrityError):
+                    sessao.execute(text('INSERT INTO checkpoint (numero,id_corrida,id_professor) VALUES (1,999,999)'))
+                sessao.rollback()
+        finally: engine.dispose()
 
-
-def testar_arquivo_invalido() -> None:
-    """Rejeita JSON corrompido sem descartar os dados anteriores."""
-    with TemporaryDirectory() as pasta:
-        diretorio = Path(pasta)
-        Trekking(diretorio)
-        (diretorio / 'equipes.json').write_text('{invalid', encoding='utf-8')
-        try:
-            Trekking(diretorio)
-        except ErroPersistencia:
-            pass
-        else:
-            raise AssertionError('JSON inválido deveria ser rejeitado')
-
-
-def testar_referencia_inexistente() -> None:
-    """Rejeita registros que referenciam entidades ausentes."""
-    with TemporaryDirectory() as pasta:
-        diretorio = Path(pasta)
-        Trekking(diretorio)
-        (diretorio / 'equipes.json').write_text(json.dumps([{'id': 1, 'nome': 'Sem corrida', 'corrida_ids': [99]}]), encoding='utf-8')
-        try:
-            Trekking(diretorio)
-        except ErroPersistencia:
-            pass
-        else:
-            raise AssertionError('Referência inexistente deveria ser rejeitada')
-
-
-if __name__ == '__main__':
-    testar_reinicio_e_relacionamentos()
-    testar_arquivo_invalido()
-    testar_referencia_inexistente()
-    print('Testes de persistência da terceira versão passaram.')
+if __name__ == '__main__': unittest.main()

@@ -38,9 +38,6 @@ class CheckpointService:
 
         checkpoint = Checkpoint(numero, corrida, professor)
         self.__aplicacao.adicionar_checkpoint(checkpoint)
-        corrida.adicionar_checkpoint(checkpoint)
-        professor.adicionar_checkpoint(checkpoint)
-        self.__aplicacao.salvar_dados()
         return checkpoint
 
     def listar(self) -> tuple[Checkpoint, ...]:
@@ -50,6 +47,8 @@ class CheckpointService:
     def buscar(self, indice: int) -> Checkpoint:
         """Busca um checkpoint pelo índice informado."""
         try:
+            if indice < 0:
+                raise IndexError(indice)
             return self.__aplicacao.checkpoints[indice]
         except IndexError as erro:
             raise CheckpointNaoEncontradoError(

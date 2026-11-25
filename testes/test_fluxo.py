@@ -1,11 +1,15 @@
 from aplicacao import Trekking
+from tempfile import TemporaryDirectory
+from pathlib import Path
+import unittest
 from excecoes import EquipeNaoParticipanteError, PassagemJaRegistradaError
 from servicos import ServicosTrekking
 
 
 def testar_fluxo_completo() -> None:
     """Executa um fluxo válido completo do estudo de caso."""
-    aplicacao = Trekking()
+    pasta = TemporaryDirectory()
+    aplicacao = Trekking(Path(pasta.name))
     servicos = ServicosTrekking(aplicacao)
 
     corrida = servicos.corridas.cadastrar("Trilha IFRN")
@@ -27,11 +31,14 @@ def testar_fluxo_completo() -> None:
     assert passagem in servicos.passagens.listar_por_corrida(corrida)
     assert passagem in servicos.passagens.listar_por_equipe(equipe)
     assert passagem in servicos.passagens.listar_por_checkpoint(checkpoint)
+    aplicacao.close()
+    pasta.cleanup()
 
 
 def testar_situacao_invalida() -> None:
     """Verifica a exceção ao registrar a mesma passagem duas vezes."""
-    aplicacao = Trekking()
+    pasta = TemporaryDirectory()
+    aplicacao = Trekking(Path(pasta.name))
     servicos = ServicosTrekking(aplicacao)
 
     corrida = servicos.corridas.cadastrar("Trilha Teste")
@@ -62,7 +69,13 @@ def testar_situacao_invalida() -> None:
         pass
     else:
         raise AssertionError("Equipe sem participação deveria gerar exceção.")
+    aplicacao.close()
+    pasta.cleanup()
 
+
+class TesteFluxo(unittest.TestCase):
+    def test_fluxo_completo(self): testar_fluxo_completo()
+    def test_situacao_invalida(self): testar_situacao_invalida()
 
 if __name__ == "__main__":
     testar_fluxo_completo()

@@ -18,6 +18,8 @@ class MenuProfessores(Menu):
             print("2 - Listar professores")
             print("3 - Consultar professor")
             print("4 - Consultar checkpoints do professor")
+            print("8 - Atualizar nome")
+            print("9 - Remover registro sem vínculos")
             print("0 - Voltar")
 
             opcao = input("Escolha uma opção: ")
@@ -29,6 +31,10 @@ class MenuProfessores(Menu):
                 tela.consultar()
             elif opcao == "4":
                 tela.listar_checkpoints()
+            elif opcao == "8":
+                tela.atualizar()
+            elif opcao == "9":
+                tela.remover()
             elif opcao == "0":
                 break
             else:
